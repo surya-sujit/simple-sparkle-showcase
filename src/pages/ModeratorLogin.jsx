@@ -1,42 +1,56 @@
 
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Form, Button, Container, Card, Spinner, Alert } from 'react-bootstrap';
-import { toast } from 'sonner';
-import { authAPI } from '../services/api';
+import { Container, Row, Col, Card, Form, Button, Alert } from 'react-bootstrap';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '@/context/AuthContext';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import { toast } from 'sonner';
 
 const ModeratorLogin = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    email: '',
+    password: '',
+  });
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  
+  const { login } = useAuth();
   const navigate = useNavigate();
+
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    if (!email || !password) {
-      setError('Please enter email and password');
-      return;
-    }
+    setError('');
+    setLoading(true);
     
     try {
-      setIsLoading(true);
-      setError('');
-      const response = await authAPI.login(email, password);
+      // This is a mock moderator login for demonstration
+      await new Promise(resolve => setTimeout(resolve, 800));
       
-      if (response.user && (response.user.isModerator || response.user.isAdmin)) {
-        toast.success('Moderator login successful');
-        navigate('/moderator');
-      } else {
-        setError('You do not have moderator privileges');
-      }
+      // Include moderator role in user data
+      const userData = {
+        username: 'Moderator User',
+        email: formData.email,
+        isAdmin: false,
+        isWorker: false,
+        isModerator: true,
+      };
+      
+      await login(userData);
+      toast.success('Moderator login successful');
+      navigate('/moderator');
     } catch (error) {
-      setError(error.message || 'Login failed');
+      console.error('Login error:', error);
+      setError('Invalid moderator credentials. Please try again.');
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
@@ -44,72 +58,70 @@ const ModeratorLogin = () => {
     <div className="d-flex flex-column min-vh-100">
       <Navbar />
       
-      <div className="flex-grow-1 d-flex align-items-center justify-content-center bg-light py-5">
-        <Container className="py-5">
-          <div className="row justify-content-center">
-            <div className="col-md-6 col-lg-5">
-              <Card className="shadow border-0">
-                <Card.Body className="p-4">
-                  <h2 className="text-center mb-4">Moderator Login</h2>
+      <Container className="flex-grow-1 py-5 mt-5">
+        <Row className="justify-content-center">
+          <Col md={8} lg={6} xl={5}>
+            <Card className="border-0 shadow-sm">
+              <Card.Body className="p-4 p-md-5">
+                <div className="text-center mb-4">
+                  <h2 className="h3 mb-1">Moderator Login</h2>
+                  <p className="text-muted">Access the moderator dashboard</p>
+                </div>
+                
+                {error && <Alert variant="danger">{error}</Alert>}
+                
+                <Form onSubmit={handleSubmit}>
+                  <Form.Group className="mb-3">
+                    <Form.Label>Email address</Form.Label>
+                    <Form.Control
+                      type="email"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleChange}
+                      placeholder="Enter your email"
+                      required
+                    />
+                  </Form.Group>
                   
-                  {error && (
-                    <Alert variant="danger" className="mb-4">
-                      {error}
-                    </Alert>
-                  )}
+                  <Form.Group className="mb-4">
+                    <div className="d-flex justify-content-between align-items-center mb-1">
+                      <Form.Label className="mb-0">Password</Form.Label>
+                      <Link to="/forgot-password" className="small text-decoration-none">
+                        Forgot password?
+                      </Link>
+                    </div>
+                    <Form.Control
+                      type="password"
+                      name="password"
+                      value={formData.password}
+                      onChange={handleChange}
+                      placeholder="Enter your password"
+                      required
+                    />
+                  </Form.Group>
                   
-                  <Form onSubmit={handleSubmit}>
-                    <Form.Group className="mb-3">
-                      <Form.Label>Email</Form.Label>
-                      <Form.Control
-                        type="email"
-                        placeholder="moderator@example.com"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        required
-                      />
-                    </Form.Group>
-                    
-                    <Form.Group className="mb-4">
-                      <Form.Label>Password</Form.Label>
-                      <Form.Control
-                        type="password"
-                        placeholder="••••••••"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        required
-                      />
-                    </Form.Group>
-                    
-                    <Button
-                      type="submit"
-                      variant="primary"
-                      className="w-100"
-                      disabled={isLoading}
-                    >
-                      {isLoading ? (
-                        <>
-                          <Spinner
-                            as="span"
-                            animation="border"
-                            size="sm"
-                            role="status"
-                            aria-hidden="true"
-                            className="me-2"
-                          />
-                          Logging in...
-                        </>
-                      ) : (
-                        'Login as Moderator'
-                      )}
-                    </Button>
-                  </Form>
-                </Card.Body>
-              </Card>
-            </div>
-          </div>
-        </Container>
-      </div>
+                  <Button 
+                    variant="primary" 
+                    type="submit" 
+                    className="w-100 py-2 mb-3"
+                    disabled={loading}
+                  >
+                    {loading ? 'Logging in...' : 'Login as Moderator'}
+                  </Button>
+                  
+                  <div className="text-center">
+                    <p className="text-muted mb-0">Need a regular account?{' '}
+                      <Link to="/login" className="text-decoration-none">
+                        User Login
+                      </Link>
+                    </p>
+                  </div>
+                </Form>
+              </Card.Body>
+            </Card>
+          </Col>
+        </Row>
+      </Container>
       
       <Footer />
     </div>

@@ -1,403 +1,315 @@
 
 import React from 'react';
+import { Container, Row, Col, Card, Button, Table, Badge } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import { Button } from '@/components/ui/button';
-import { Check, Star } from 'lucide-react';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-
-const PricingFeature = ({ children }) => {
-  return (
-    <div className="flex items-center mb-4">
-      <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0" />
-      <span>{children}</span>
-    </div>
-  );
-};
+import { useAuth } from '@/context/AuthContext';
 
 const Pricing = () => {
+  const { state } = useAuth();
+  const { isAuthenticated } = state;
+  
+  // Pricing tiers data
+  const pricingTiers = [
+    {
+      name: 'Basic',
+      price: 0,
+      period: 'Forever',
+      description: 'Everything you need to get started booking accommodations.',
+      features: [
+        'Browse all hotels and resorts',
+        'Read and write reviews',
+        'Basic customer support',
+        'Secure booking process',
+        'Email confirmations'
+      ],
+      cta: 'Sign Up Free',
+      popular: false,
+      color: 'primary'
+    },
+    {
+      name: 'Premium',
+      price: 9.99,
+      period: 'per month',
+      description: 'Enhanced features for frequent travelers.',
+      features: [
+        'All Basic features',
+        'Early access to deals',
+        'Price alerts',
+        'Priority customer support',
+        'Loyalty points (2x)',
+        'Free cancellations',
+        'Exclusive partner discounts'
+      ],
+      cta: 'Get Premium',
+      popular: true,
+      color: 'primary'
+    },
+    {
+      name: 'Business',
+      price: 49.99,
+      period: 'per month',
+      description: 'Perfect for business travelers and small teams.',
+      features: [
+        'All Premium features',
+        'Business travel reports',
+        'Team management',
+        'VAT invoices',
+        'Corporate billing',
+        'Dedicated account manager',
+        'API access',
+        '24/7 phone support'
+      ],
+      cta: 'Contact Sales',
+      popular: false,
+      color: 'primary'
+    }
+  ];
+  
+  // FAQs data
+  const faqs = [
+    {
+      question: 'What is included in the free plan?',
+      answer: 'The Basic free plan includes everything you need to search, book, and review accommodations on StayHaven. You can browse all listings, access standard customer support, and enjoy our secure booking process.'
+    },
+    {
+      question: 'Can I cancel my subscription at any time?',
+      answer: 'Yes, you can cancel your Premium or Business subscription at any time. Your benefits will continue until the end of your billing period, after which you\'ll be downgraded to the Basic plan.'
+    },
+    {
+      question: 'Is there a discount for annual billing?',
+      answer: 'Yes! You can save 20% by choosing annual billing for either the Premium or Business plans. This discount will be applied automatically when you select the annual billing option.'
+    },
+    {
+      question: 'How do loyalty points work?',
+      answer: 'Loyalty points are earned with every booking. Basic members earn 1 point per dollar spent, while Premium members earn 2 points per dollar. These points can be redeemed for discounts on future bookings, room upgrades, and other perks.'
+    },
+    {
+      question: 'What payment methods do you accept?',
+      answer: 'We accept all major credit cards (Visa, Mastercard, American Express, Discover), PayPal, and Apple Pay. For Business plan customers, we also offer invoice payment options.'
+    },
+    {
+      question: 'How does the price match guarantee work?',
+      answer: 'If you find a lower price for the same accommodation with the same booking conditions on another website within 24 hours of booking, we\'ll refund the difference. Premium and Business members also receive an additional 10% discount on their next booking.'
+    }
+  ];
+  
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="d-flex flex-column min-vh-100">
       <Navbar />
       
-      <main className="flex-grow pt-16 md:pt-20 bg-gradient-to-b from-blue-50 to-white">
-        {/* Hero Section */}
-        <section className="py-12 md:py-20">
-          <div className="container-custom text-center max-w-4xl mx-auto">
-            <h1 className="text-4xl md:text-5xl font-extrabold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-purple-600">
-              Simple, Transparent Pricing
-            </h1>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-12">
-              Choose the perfect plan for your travel needs. No hidden fees, no surprises.
-            </p>
-            
-            {/* Pricing Toggle */}
-            <div className="mb-12">
-              <Tabs defaultValue="monthly" className="w-full max-w-md mx-auto">
-                <TabsList className="grid w-full grid-cols-2 bg-blue-100">
-                  <TabsTrigger value="monthly" className="data-[state=active]:bg-white">Monthly</TabsTrigger>
-                  <TabsTrigger value="yearly" className="data-[state=active]:bg-white">Yearly <span className="ml-1 text-xs font-bold text-green-600">Save 20%</span></TabsTrigger>
-                </TabsList>
-                
-                <TabsContent value="monthly" className="mt-8">
-                  <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-                    {/* Basic Plan */}
-                    <div className="bg-white rounded-xl shadow-xl overflow-hidden border border-gray-100 transform transition-all duration-300 hover:scale-105 hover:shadow-2xl flex flex-col h-full">
-                      <div className="p-6 border-b">
-                        <div className="text-sm font-semibold text-blue-600 uppercase mb-2">Basic</div>
-                        <div className="flex items-end gap-1 mb-2">
-                          <span className="text-4xl font-bold">$9.99</span>
-                          <span className="text-gray-600 mb-1">/month</span>
-                        </div>
-                        <p className="text-gray-500">Perfect for occasional travelers.</p>
-                      </div>
-                      
-                      <div className="p-6 flex-grow space-y-4 bg-gray-50">
-                        <PricingFeature>5 bookings per month</PricingFeature>
-                        <PricingFeature>Basic customer support</PricingFeature>
-                        <PricingFeature>Standard cancellation policy</PricingFeature>
-                      </div>
-                      
-                      <div className="p-6">
-                        <Link to="/register" className="w-full">
-                          <Button className="w-full bg-blue-600 hover:bg-blue-700">Get Started</Button>
-                        </Link>
-                      </div>
-                    </div>
-                    
-                    {/* Premium Plan */}
-                    <div className="bg-white rounded-xl shadow-xl overflow-hidden border-2 border-blue-500 transform transition-all duration-300 hover:scale-105 hover:shadow-2xl flex flex-col h-full relative">
-                      <div className="absolute top-0 right-0 bg-blue-500 text-white text-xs font-bold px-3 py-1 rounded-bl-lg">
-                        POPULAR
-                      </div>
-                      
-                      <div className="p-6 border-b bg-gradient-to-r from-blue-500 to-blue-600 text-white">
-                        <div className="text-sm font-semibold uppercase mb-2">Premium</div>
-                        <div className="flex items-end gap-1 mb-2">
-                          <span className="text-4xl font-bold">$19.99</span>
-                          <span className="mb-1">/month</span>
-                        </div>
-                        <p className="text-blue-100">Ideal for regular travelers and families.</p>
-                      </div>
-                      
-                      <div className="p-6 flex-grow space-y-4 bg-blue-50">
-                        <PricingFeature>Unlimited bookings</PricingFeature>
-                        <PricingFeature>Priority customer support</PricingFeature>
-                        <PricingFeature>Flexible cancellation policy</PricingFeature>
-                        <PricingFeature>Special room upgrades</PricingFeature>
-                        <PricingFeature>Early check-in when available</PricingFeature>
-                      </div>
-                      
-                      <div className="p-6">
-                        <Link to="/register" className="w-full">
-                          <Button className="w-full bg-blue-600 hover:bg-blue-700">Get Started</Button>
-                        </Link>
-                      </div>
-                    </div>
-                    
-                    {/* Business Plan */}
-                    <div className="bg-white rounded-xl shadow-xl overflow-hidden border border-gray-100 transform transition-all duration-300 hover:scale-105 hover:shadow-2xl flex flex-col h-full">
-                      <div className="p-6 border-b">
-                        <div className="text-sm font-semibold text-blue-600 uppercase mb-2">Business</div>
-                        <div className="flex items-end gap-1 mb-2">
-                          <span className="text-4xl font-bold">$49.99</span>
-                          <span className="text-gray-600 mb-1">/month</span>
-                        </div>
-                        <p className="text-gray-500">For business travelers and teams.</p>
-                      </div>
-                      
-                      <div className="p-6 flex-grow space-y-4 bg-gray-50">
-                        <PricingFeature>Unlimited bookings</PricingFeature>
-                        <PricingFeature>24/7 dedicated support</PricingFeature>
-                        <PricingFeature>Free cancellation anytime</PricingFeature>
-                        <PricingFeature>Team management dashboard</PricingFeature>
-                        <PricingFeature>Expense reporting tools</PricingFeature>
-                        <PricingFeature>Corporate billing options</PricingFeature>
-                      </div>
-                      
-                      <div className="p-6">
-                        <Link to="/register" className="w-full">
-                          <Button className="w-full bg-blue-600 hover:bg-blue-700">Get Started</Button>
-                        </Link>
-                      </div>
+      {/* Hero Section */}
+      <div className="bg-primary text-white pt-5 mt-5">
+        <Container className="py-5 text-center">
+          <h1 className="display-4 fw-bold mb-3">Simple, Transparent Pricing</h1>
+          <p className="lead mx-auto mb-4" style={{ maxWidth: '700px' }}>
+            Choose the plan that's right for you and start enjoying enhanced booking features and benefits.
+          </p>
+          <div className="d-inline-block bg-white bg-opacity-10 rounded-pill p-2 mb-4">
+            <Button variant="light" className="rounded-pill px-4 me-2 fw-semibold">
+              Monthly
+            </Button>
+            <Button variant="transparent" className="rounded-pill px-4 text-white">
+              Annual <Badge bg="success" className="ms-2">Save 20%</Badge>
+            </Button>
+          </div>
+        </Container>
+      </div>
+      
+      {/* Pricing Cards */}
+      <Container className="py-5 mt-n5">
+        <Row className="g-4">
+          {pricingTiers.map((tier, index) => (
+            <Col lg={4} key={index}>
+              <Card 
+                className={`h-100 border-0 shadow-lg ${tier.popular ? 'transform-scale' : ''}`}
+                style={{ 
+                  transform: tier.popular ? 'translateY(-20px)' : 'none',
+                  zIndex: tier.popular ? 1 : 0,
+                  borderTop: tier.popular ? `5px solid var(--hotel-${tier.color})` : 'none'
+                }}
+              >
+                {tier.popular && (
+                  <div className="position-absolute top-0 start-50 translate-middle">
+                    <Badge bg="primary" className="px-3 py-2 rounded-pill fw-semibold">Most Popular</Badge>
+                  </div>
+                )}
+                <Card.Body className="p-5">
+                  <div className="text-center mb-4">
+                    <h3 className="mb-1">{tier.name}</h3>
+                    <p className="text-muted mb-3">{tier.description}</p>
+                    <div className="d-flex align-items-center justify-content-center">
+                      {tier.price > 0 && <span className="h4 mb-0 me-1">$</span>}
+                      <span className="display-4 fw-bold">{tier.price > 0 ? tier.price : 'Free'}</span>
+                      {tier.price > 0 && <span className="text-muted ms-2">{tier.period}</span>}
                     </div>
                   </div>
-                </TabsContent>
-                
-                <TabsContent value="yearly" className="mt-8">
-                  <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-                    {/* Yearly Basic Plan */}
-                    <div className="bg-white rounded-xl shadow-xl overflow-hidden border border-gray-100 transform transition-all duration-300 hover:scale-105 hover:shadow-2xl flex flex-col h-full">
-                      <div className="p-6 border-b">
-                        <div className="text-sm font-semibold text-blue-600 uppercase mb-2">Basic</div>
-                        <div className="flex items-end gap-1 mb-2">
-                          <span className="text-4xl font-bold">$95.88</span>
-                          <span className="text-gray-600 mb-1">/year</span>
-                        </div>
-                        <p className="text-gray-500">Perfect for occasional travelers.</p>
-                        <p className="text-green-600 font-semibold mt-1">Save $23.97</p>
-                      </div>
-                      
-                      <div className="p-6 flex-grow space-y-4 bg-gray-50">
-                        <PricingFeature>5 bookings per month</PricingFeature>
-                        <PricingFeature>Basic customer support</PricingFeature>
-                        <PricingFeature>Standard cancellation policy</PricingFeature>
-                      </div>
-                      
-                      <div className="p-6">
-                        <Link to="/register" className="w-full">
-                          <Button className="w-full bg-blue-600 hover:bg-blue-700">Get Started</Button>
-                        </Link>
-                      </div>
-                    </div>
-                    
-                    {/* Yearly Premium Plan */}
-                    <div className="bg-white rounded-xl shadow-xl overflow-hidden border-2 border-blue-500 transform transition-all duration-300 hover:scale-105 hover:shadow-2xl flex flex-col h-full relative">
-                      <div className="absolute top-0 right-0 bg-blue-500 text-white text-xs font-bold px-3 py-1 rounded-bl-lg">
-                        POPULAR
-                      </div>
-                      
-                      <div className="p-6 border-b bg-gradient-to-r from-blue-500 to-blue-600 text-white">
-                        <div className="text-sm font-semibold uppercase mb-2">Premium</div>
-                        <div className="flex items-end gap-1 mb-2">
-                          <span className="text-4xl font-bold">$191.88</span>
-                          <span className="mb-1">/year</span>
-                        </div>
-                        <p className="text-blue-100">Ideal for regular travelers and families.</p>
-                        <p className="text-blue-100 font-semibold mt-1">Save $47.94</p>
-                      </div>
-                      
-                      <div className="p-6 flex-grow space-y-4 bg-blue-50">
-                        <PricingFeature>Unlimited bookings</PricingFeature>
-                        <PricingFeature>Priority customer support</PricingFeature>
-                        <PricingFeature>Flexible cancellation policy</PricingFeature>
-                        <PricingFeature>Special room upgrades</PricingFeature>
-                        <PricingFeature>Early check-in when available</PricingFeature>
-                      </div>
-                      
-                      <div className="p-6">
-                        <Link to="/register" className="w-full">
-                          <Button className="w-full bg-blue-600 hover:bg-blue-700">Get Started</Button>
-                        </Link>
-                      </div>
-                    </div>
-                    
-                    {/* Yearly Business Plan */}
-                    <div className="bg-white rounded-xl shadow-xl overflow-hidden border border-gray-100 transform transition-all duration-300 hover:scale-105 hover:shadow-2xl flex flex-col h-full">
-                      <div className="p-6 border-b">
-                        <div className="text-sm font-semibold text-blue-600 uppercase mb-2">Business</div>
-                        <div className="flex items-end gap-1 mb-2">
-                          <span className="text-4xl font-bold">$479.88</span>
-                          <span className="text-gray-600 mb-1">/year</span>
-                        </div>
-                        <p className="text-gray-500">For business travelers and teams.</p>
-                        <p className="text-green-600 font-semibold mt-1">Save $119.97</p>
-                      </div>
-                      
-                      <div className="p-6 flex-grow space-y-4 bg-gray-50">
-                        <PricingFeature>Unlimited bookings</PricingFeature>
-                        <PricingFeature>24/7 dedicated support</PricingFeature>
-                        <PricingFeature>Free cancellation anytime</PricingFeature>
-                        <PricingFeature>Team management dashboard</PricingFeature>
-                        <PricingFeature>Expense reporting tools</PricingFeature>
-                        <PricingFeature>Corporate billing options</PricingFeature>
-                      </div>
-                      
-                      <div className="p-6">
-                        <Link to="/register" className="w-full">
-                          <Button className="w-full bg-blue-600 hover:bg-blue-700">Get Started</Button>
-                        </Link>
-                      </div>
-                    </div>
-                  </div>
-                </TabsContent>
-              </Tabs>
-            </div>
-          </div>
-        </section>
-        
-        {/* Compare Plans */}
-        <section className="py-12 md:py-16 bg-white">
-          <div className="container-custom">
-            <h2 className="text-3xl font-bold text-center mb-12">Compare Plans</h2>
-            
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse">
-                <thead>
-                  <tr>
-                    <th className="p-4 text-left border-b-2 border-gray-200">Features</th>
-                    <th className="p-4 text-center border-b-2 border-gray-200">Basic</th>
-                    <th className="p-4 text-center border-b-2 border-blue-200 bg-blue-50">Premium</th>
-                    <th className="p-4 text-center border-b-2 border-gray-200">Business</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td className="p-4 border-b border-gray-200">Monthly Bookings</td>
-                    <td className="p-4 text-center border-b border-gray-200">5</td>
-                    <td className="p-4 text-center border-b border-blue-200 bg-blue-50">Unlimited</td>
-                    <td className="p-4 text-center border-b border-gray-200">Unlimited</td>
-                  </tr>
-                  <tr>
-                    <td className="p-4 border-b border-gray-200">Customer Support</td>
-                    <td className="p-4 text-center border-b border-gray-200">Basic</td>
-                    <td className="p-4 text-center border-b border-blue-200 bg-blue-50">Priority</td>
-                    <td className="p-4 text-center border-b border-gray-200">24/7 Dedicated</td>
-                  </tr>
-                  <tr>
-                    <td className="p-4 border-b border-gray-200">Room Upgrades</td>
-                    <td className="p-4 text-center border-b border-gray-200">-</td>
-                    <td className="p-4 text-center border-b border-blue-200 bg-blue-50"><Check className="h-5 w-5 text-green-500 mx-auto" /></td>
-                    <td className="p-4 text-center border-b border-gray-200"><Check className="h-5 w-5 text-green-500 mx-auto" /></td>
-                  </tr>
-                  <tr>
-                    <td className="p-4 border-b border-gray-200">Early Check-in</td>
-                    <td className="p-4 text-center border-b border-gray-200">-</td>
-                    <td className="p-4 text-center border-b border-blue-200 bg-blue-50"><Check className="h-5 w-5 text-green-500 mx-auto" /></td>
-                    <td className="p-4 text-center border-b border-gray-200"><Check className="h-5 w-5 text-green-500 mx-auto" /></td>
-                  </tr>
-                  <tr>
-                    <td className="p-4 border-b border-gray-200">Team Management</td>
-                    <td className="p-4 text-center border-b border-gray-200">-</td>
-                    <td className="p-4 text-center border-b border-blue-200 bg-blue-50">-</td>
-                    <td className="p-4 text-center border-b border-gray-200"><Check className="h-5 w-5 text-green-500 mx-auto" /></td>
-                  </tr>
-                  <tr>
-                    <td className="p-4 border-b border-gray-200">Expense Reporting</td>
-                    <td className="p-4 text-center border-b border-gray-200">-</td>
-                    <td className="p-4 text-center border-b border-blue-200 bg-blue-50">-</td>
-                    <td className="p-4 text-center border-b border-gray-200"><Check className="h-5 w-5 text-green-500 mx-auto" /></td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </section>
-        
-        {/* Testimonials */}
-        <section className="py-12 md:py-16 bg-gray-50">
-          <div className="container-custom">
-            <h2 className="text-3xl font-bold text-center mb-4">What Our Customers Say</h2>
-            <p className="text-center text-gray-600 mb-12 max-w-2xl mx-auto">
-              Thousands of travelers trust StayHaven for their accommodation needs. Here's what some of them have to say.
-            </p>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <div className="bg-white p-6 rounded-xl shadow-md">
-                <div className="flex items-center mb-4">
-                  <div className="flex">
-                    {[...Array(5)].map((_, i) => (
-                      <Star key={i} className="h-5 w-5 text-yellow-400 fill-current" />
+                  
+                  <ul className="list-unstyled mb-4">
+                    {tier.features.map((feature, i) => (
+                      <li key={i} className="mb-3 d-flex align-items-center">
+                        <i className="bi bi-check-circle-fill text-success me-2"></i>
+                        {feature}
+                      </li>
                     ))}
+                  </ul>
+                  
+                  <div className="d-grid">
+                    <Link to={isAuthenticated ? '/dashboard' : '/register'}>
+                      <Button
+                        variant={tier.popular ? tier.color : 'outline-primary'}
+                        size="lg"
+                        className="fw-semibold"
+                      >
+                        {tier.cta}
+                      </Button>
+                    </Link>
                   </div>
-                </div>
-                <p className="text-gray-600 mb-4">
-                  "The Premium plan has been worth every penny. I love the flexibility of changing my bookings and the room upgrades have been fantastic!"
-                </p>
-                <div className="flex items-center">
-                  <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center mr-3">
-                    <span className="font-semibold text-blue-600">JD</span>
-                  </div>
-                  <div>
-                    <p className="font-medium">John Doe</p>
-                    <p className="text-sm text-gray-500">Premium Plan Member</p>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="bg-white p-6 rounded-xl shadow-md">
-                <div className="flex items-center mb-4">
-                  <div className="flex">
-                    {[...Array(5)].map((_, i) => (
-                      <Star key={i} className="h-5 w-5 text-yellow-400 fill-current" />
-                    ))}
-                  </div>
-                </div>
-                <p className="text-gray-600 mb-4">
-                  "We manage all our company travel through the Business plan. The expense reporting tools save our accounting team so much time!"
-                </p>
-                <div className="flex items-center">
-                  <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center mr-3">
-                    <span className="font-semibold text-blue-600">MS</span>
-                  </div>
-                  <div>
-                    <p className="font-medium">Maria Smith</p>
-                    <p className="text-sm text-gray-500">Business Plan Member</p>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="bg-white p-6 rounded-xl shadow-md">
-                <div className="flex items-center mb-4">
-                  <div className="flex">
-                    {[...Array(4)].map((_, i) => (
-                      <Star key={i} className="h-5 w-5 text-yellow-400 fill-current" />
-                    ))}
-                    <Star className="h-5 w-5 text-gray-300" />
-                  </div>
-                </div>
-                <p className="text-gray-600 mb-4">
-                  "The Basic plan is perfect for someone like me who only travels occasionally. I might upgrade to Premium soon though for the extra perks!"
-                </p>
-                <div className="flex items-center">
-                  <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center mr-3">
-                    <span className="font-semibold text-blue-600">RJ</span>
-                  </div>
-                  <div>
-                    <p className="font-medium">Robert Johnson</p>
-                    <p className="text-sm text-gray-500">Basic Plan Member</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-        
-        {/* FAQ Section */}
-        <section className="py-12 md:py-16 bg-white">
-          <div className="container-custom">
-            <h2 className="text-3xl font-bold mb-8 text-center">Frequently Asked Questions</h2>
-            
-            <div className="max-w-3xl mx-auto space-y-6">
-              <div className="bg-gray-50 p-6 rounded-xl">
-                <h3 className="text-xl font-semibold mb-3">Can I cancel my subscription?</h3>
-                <p className="text-gray-600">Yes, you can cancel your subscription at any time. If you cancel, you'll still have access to your plan until the end of your billing period.</p>
-              </div>
-              
-              <div className="bg-gray-50 p-6 rounded-xl">
-                <h3 className="text-xl font-semibold mb-3">How do I upgrade or downgrade my plan?</h3>
-                <p className="text-gray-600">You can upgrade or downgrade your plan at any time from your account settings. Changes will take effect on your next billing cycle.</p>
-              </div>
-              
-              <div className="bg-gray-50 p-6 rounded-xl">
-                <h3 className="text-xl font-semibold mb-3">Is there a free trial available?</h3>
-                <p className="text-gray-600">Yes! You can try any plan free for 14 days. No credit card required during the trial period.</p>
-              </div>
-              
-              <div className="bg-gray-50 p-6 rounded-xl">
-                <h3 className="text-xl font-semibold mb-3">What payment methods do you accept?</h3>
-                <p className="text-gray-600">We accept all major credit cards, PayPal, and Apple Pay. For Business plans, we also offer invoice-based payments.</p>
-              </div>
-            </div>
-          </div>
-        </section>
-        
-        {/* CTA Section */}
-        <section className="py-12 md:py-20 bg-gradient-to-r from-blue-600 to-purple-600 text-white">
-          <div className="container-custom text-center">
-            <h2 className="text-3xl md:text-4xl font-bold mb-6">Ready to get started?</h2>
-            <p className="text-xl mb-8 max-w-2xl mx-auto">
-              Join thousands of satisfied customers who trust StayHaven for all their travel accommodation needs.
+                </Card.Body>
+              </Card>
+            </Col>
+          ))}
+        </Row>
+      </Container>
+      
+      {/* Feature Comparison */}
+      <div className="bg-light py-5">
+        <Container>
+          <div className="text-center mb-5">
+            <h2 className="mb-3">Compare Plans</h2>
+            <p className="text-muted mx-auto" style={{ maxWidth: '700px' }}>
+              A detailed breakdown of all features available in each plan to help you make the right choice.
             </p>
+          </div>
+          
+          <div className="table-responsive">
+            <Table className="border-0 bg-white shadow-sm rounded-3 overflow-hidden">
+              <thead>
+                <tr className="bg-light">
+                  <th style={{ width: '40%' }}>Feature</th>
+                  <th className="text-center">Basic</th>
+                  <th className="text-center">Premium</th>
+                  <th className="text-center">Business</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Hotel & Resort Browsing</td>
+                  <td className="text-center"><i className="bi bi-check-lg text-success"></i></td>
+                  <td className="text-center"><i className="bi bi-check-lg text-success"></i></td>
+                  <td className="text-center"><i className="bi bi-check-lg text-success"></i></td>
+                </tr>
+                <tr>
+                  <td>Reviews Access</td>
+                  <td className="text-center"><i className="bi bi-check-lg text-success"></i></td>
+                  <td className="text-center"><i className="bi bi-check-lg text-success"></i></td>
+                  <td className="text-center"><i className="bi bi-check-lg text-success"></i></td>
+                </tr>
+                <tr>
+                  <td>Loyalty Points</td>
+                  <td className="text-center">1x</td>
+                  <td className="text-center">2x</td>
+                  <td className="text-center">3x</td>
+                </tr>
+                <tr>
+                  <td>Early Access to Deals</td>
+                  <td className="text-center"><i className="bi bi-x-lg text-danger"></i></td>
+                  <td className="text-center"><i className="bi bi-check-lg text-success"></i></td>
+                  <td className="text-center"><i className="bi bi-check-lg text-success"></i></td>
+                </tr>
+                <tr>
+                  <td>Price Alerts</td>
+                  <td className="text-center"><i className="bi bi-x-lg text-danger"></i></td>
+                  <td className="text-center"><i className="bi bi-check-lg text-success"></i></td>
+                  <td className="text-center"><i className="bi bi-check-lg text-success"></i></td>
+                </tr>
+                <tr>
+                  <td>Free Cancellations</td>
+                  <td className="text-center"><i className="bi bi-x-lg text-danger"></i></td>
+                  <td className="text-center"><i className="bi bi-check-lg text-success"></i></td>
+                  <td className="text-center"><i className="bi bi-check-lg text-success"></i></td>
+                </tr>
+                <tr>
+                  <td>Priority Support</td>
+                  <td className="text-center"><i className="bi bi-x-lg text-danger"></i></td>
+                  <td className="text-center"><i className="bi bi-check-lg text-success"></i></td>
+                  <td className="text-center"><i className="bi bi-check-lg text-success"></i></td>
+                </tr>
+                <tr>
+                  <td>Team Management</td>
+                  <td className="text-center"><i className="bi bi-x-lg text-danger"></i></td>
+                  <td className="text-center"><i className="bi bi-x-lg text-danger"></i></td>
+                  <td className="text-center"><i className="bi bi-check-lg text-success"></i></td>
+                </tr>
+                <tr>
+                  <td>Dedicated Account Manager</td>
+                  <td className="text-center"><i className="bi bi-x-lg text-danger"></i></td>
+                  <td className="text-center"><i className="bi bi-x-lg text-danger"></i></td>
+                  <td className="text-center"><i className="bi bi-check-lg text-success"></i></td>
+                </tr>
+                <tr>
+                  <td>API Access</td>
+                  <td className="text-center"><i className="bi bi-x-lg text-danger"></i></td>
+                  <td className="text-center"><i className="bi bi-x-lg text-danger"></i></td>
+                  <td className="text-center"><i className="bi bi-check-lg text-success"></i></td>
+                </tr>
+                <tr>
+                  <td>Business Travel Reports</td>
+                  <td className="text-center"><i className="bi bi-x-lg text-danger"></i></td>
+                  <td className="text-center"><i className="bi bi-x-lg text-danger"></i></td>
+                  <td className="text-center"><i className="bi bi-check-lg text-success"></i></td>
+                </tr>
+              </tbody>
+            </Table>
+          </div>
+        </Container>
+      </div>
+      
+      {/* FAQs Section */}
+      <Container className="py-5">
+        <div className="text-center mb-5">
+          <h2 className="mb-3">Frequently Asked Questions</h2>
+          <p className="text-muted mx-auto" style={{ maxWidth: '700px' }}>
+            Find answers to common questions about our pricing plans and features.
+          </p>
+        </div>
+        
+        <Row className="g-4">
+          {faqs.map((faq, index) => (
+            <Col md={6} key={index}>
+              <Card className="h-100 border-0 shadow-sm">
+                <Card.Body className="p-4">
+                  <h5 className="mb-3">{faq.question}</h5>
+                  <p className="text-muted mb-0">{faq.answer}</p>
+                </Card.Body>
+              </Card>
+            </Col>
+          ))}
+        </Row>
+      </Container>
+      
+      {/* Call to Action */}
+      <div className="py-5 bg-primary text-white">
+        <Container className="py-4 text-center">
+          <h2 className="mb-4">Ready to experience StayHaven?</h2>
+          <p className="lead mb-4 mx-auto" style={{ maxWidth: '700px' }}>
+            Start your journey with a free account today. No credit card required.
+          </p>
+          <div>
             <Link to="/register">
-              <Button className="bg-white text-blue-600 hover:bg-blue-50 font-bold px-8 py-6 text-lg">
-                Start Your 14-Day Free Trial
+              <Button variant="light" size="lg" className="fw-semibold me-3">
+                Create Free Account
+              </Button>
+            </Link>
+            <Link to="/contact">
+              <Button variant="outline-light" size="lg">
+                Contact Sales
               </Button>
             </Link>
           </div>
-        </section>
-      </main>
+        </Container>
+      </div>
       
       <Footer />
     </div>

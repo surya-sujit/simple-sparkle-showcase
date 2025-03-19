@@ -1,83 +1,129 @@
 
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Container, Row, Col, Card, Form, Button, Alert } from 'react-bootstrap';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '@/context/AuthContext';
+import Navbar from '@/components/Navbar';
+import Footer from '@/components/Footer';
 import { toast } from 'sonner';
-import { authAPI } from '../services/api';
 
 const WorkerLogin = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    email: '',
+    password: '',
+  });
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  
+  const { login } = useAuth();
   const navigate = useNavigate();
+
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    if (!email || !password) {
-      toast.error('Please enter email and password');
-      return;
-    }
+    setError('');
+    setLoading(true);
     
     try {
-      setIsLoading(true);
-      const response = await authAPI.login(email, password);
+      // This is a mock worker login for demonstration
+      await new Promise(resolve => setTimeout(resolve, 800));
       
-      if (response.user && (response.user.isWorker || response.user.isModerator || response.user.isAdmin)) {
-        toast.success('Worker login successful');
-        navigate('/worker');
-      } else {
-        toast.error('You do not have worker privileges');
-      }
+      // Include worker role in user data
+      const userData = {
+        username: 'Hotel Worker',
+        email: formData.email,
+        isAdmin: false,
+        isWorker: true,
+        isModerator: false,
+      };
+      
+      await login(userData);
+      toast.success('Worker login successful');
+      navigate('/worker');
     } catch (error) {
-      toast.error(error.message || 'Login failed');
+      console.error('Login error:', error);
+      setError('Invalid worker credentials. Please try again.');
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gray-100">
-      <div className="w-full max-w-md p-8 bg-white rounded-lg shadow-md">
-        <h1 className="text-2xl font-bold text-center mb-6">Worker Login</h1>
-        
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium mb-1">
-              Email
-            </label>
-            <input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full p-2 border rounded"
-              placeholder="worker@example.com"
-            />
-          </div>
-          
-          <div>
-            <label htmlFor="password" className="block text-sm font-medium mb-1">
-              Password
-            </label>
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full p-2 border rounded"
-              placeholder="••••••••"
-            />
-          </div>
-          
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="w-full py-2 px-4 bg-hotel-500 text-white rounded hover:bg-hotel-600 disabled:opacity-50"
-          >
-            {isLoading ? 'Logging in...' : 'Login as Worker'}
-          </button>
-        </form>
-      </div>
+    <div className="d-flex flex-column min-vh-100">
+      <Navbar />
+      
+      <Container className="flex-grow-1 py-5 mt-5">
+        <Row className="justify-content-center">
+          <Col md={8} lg={6} xl={5}>
+            <Card className="border-0 shadow-sm">
+              <Card.Body className="p-4 p-md-5">
+                <div className="text-center mb-4">
+                  <h2 className="h3 mb-1">Hotel Worker Login</h2>
+                  <p className="text-muted">Access the worker dashboard</p>
+                </div>
+                
+                {error && <Alert variant="danger">{error}</Alert>}
+                
+                <Form onSubmit={handleSubmit}>
+                  <Form.Group className="mb-3">
+                    <Form.Label>Email address</Form.Label>
+                    <Form.Control
+                      type="email"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleChange}
+                      placeholder="Enter your email"
+                      required
+                    />
+                  </Form.Group>
+                  
+                  <Form.Group className="mb-4">
+                    <div className="d-flex justify-content-between align-items-center mb-1">
+                      <Form.Label className="mb-0">Password</Form.Label>
+                      <Link to="/forgot-password" className="small text-decoration-none">
+                        Forgot password?
+                      </Link>
+                    </div>
+                    <Form.Control
+                      type="password"
+                      name="password"
+                      value={formData.password}
+                      onChange={handleChange}
+                      placeholder="Enter your password"
+                      required
+                    />
+                  </Form.Group>
+                  
+                  <Button 
+                    variant="primary" 
+                    type="submit" 
+                    className="w-100 py-2 mb-3"
+                    disabled={loading}
+                  >
+                    {loading ? 'Logging in...' : 'Login as Worker'}
+                  </Button>
+                  
+                  <div className="text-center">
+                    <p className="text-muted mb-0">Need a regular account?{' '}
+                      <Link to="/login" className="text-decoration-none">
+                        User Login
+                      </Link>
+                    </p>
+                  </div>
+                </Form>
+              </Card.Body>
+            </Card>
+          </Col>
+        </Row>
+      </Container>
+      
+      <Footer />
     </div>
   );
 };

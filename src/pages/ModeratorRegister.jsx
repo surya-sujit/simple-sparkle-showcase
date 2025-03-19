@@ -1,104 +1,106 @@
 
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Form, Button, Container, Card, Row, Col, Spinner, Alert } from 'react-bootstrap';
-import { toast } from 'sonner';
-import { authAPI, moderatorAPI, hotelAPI } from '../services/api';
+import React, { useState } from 'react';
+import { Container, Row, Col, Card, Form, Button, Alert } from 'react-bootstrap';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '@/context/AuthContext';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import { toast } from 'sonner';
 
 const ModeratorRegister = () => {
   const [formData, setFormData] = useState({
     username: '',
     email: '',
     password: '',
-    country: '',
-    city: '',
-    phone: '',
-    assignedHotels: []
+    confirmPassword: '',
+    registrationCode: ''
   });
-  const [hotels, setHotels] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isLoadingHotels, setIsLoadingHotels] = useState(false);
-  const [error, setError] = useState('');
+  const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(false);
+  
+  const { register } = useAuth();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const fetchHotels = async () => {
-      try {
-        setIsLoadingHotels(true);
-        const hotelsData = await hotelAPI.getAllHotels();
-        setHotels(hotelsData);
-      } catch (error) {
-        console.error('Error fetching hotels:', error);
-      } finally {
-        setIsLoadingHotels(false);
-      }
-    };
-
-    fetchHotels();
-  }, []);
-
   const handleChange = (e) => {
-    const { name, value } = e.target;
     setFormData({
       ...formData,
-      [name]: value
+      [e.target.name]: e.target.value,
     });
+    
+    // Clear error for the field when user types
+    if (errors[e.target.name]) {
+      setErrors({
+        ...errors,
+        [e.target.name]: null
+      });
+    }
   };
 
-  const handleHotelChange = (e) => {
-    const selectedOptions = Array.from(e.target.selectedOptions).map(option => option.value);
-    setFormData({
-      ...formData,
-      assignedHotels: selectedOptions
-    });
+  const validateForm = () => {
+    const newErrors = {};
+    
+    if (!formData.username.trim()) {
+      newErrors.username = 'Username is required';
+    }
+    
+    if (!formData.email.trim()) {
+      newErrors.email = 'Email is required';
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      newErrors.email = 'Email is invalid';
+    }
+    
+    if (!formData.password) {
+      newErrors.password = 'Password is required';
+    } else if (formData.password.length < 6) {
+      newErrors.password = 'Password must be at least 6 characters';
+    }
+    
+    if (formData.password !== formData.confirmPassword) {
+      newErrors.confirmPassword = 'Passwords do not match';
+    }
+    
+    if (!formData.registrationCode) {
+      newErrors.registrationCode = 'Registration code is required';
+    } else if (formData.registrationCode !== 'MOD123') { // Simple mock validation
+      newErrors.registrationCode = 'Invalid registration code';
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    const { username, email, password, country, city, phone, assignedHotels } = formData;
-    
-    if (!username || !email || !password || !country || !city) {
-      setError('Please fill in all required fields');
+    if (!validateForm()) {
       return;
     }
     
+    setLoading(true);
+    
     try {
-      setIsLoading(true);
-      setError('');
+      // This is a mock moderator registration for demonstration
+      await new Promise(resolve => setTimeout(resolve, 800));
       
-      // First register user
-      const userResponse = await authAPI.register({
-        username,
-        email,
-        password,
-        country,
-        city,
-        phone
-      });
+      // Include moderator role in user data
+      const userData = {
+        username: formData.username,
+        email: formData.email,
+        isAdmin: false,
+        isWorker: false,
+        isModerator: true,
+      };
       
-      if (userResponse.user && userResponse.user._id) {
-        // Then create moderator profile
-        await moderatorAPI.createModerator({
-          userId: userResponse.user._id,
-          isActive: true,
-          assignedHotels,
-          permissions: {
-            canManageWorkers: true,
-            canManageRooms: true,
-            canViewBookings: true
-          }
-        });
-        
-        toast.success('Moderator registered successfully');
-        navigate('/moderator-login');
-      }
+      await register(userData);
+      toast.success('Moderator registration successful');
+      navigate('/moderator');
     } catch (error) {
-      setError(error.message || 'Registration failed');
+      console.error('Registration error:', error);
+      setErrors({
+        form: 'Registration failed. Please try again.',
+      });
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
@@ -106,156 +108,119 @@ const ModeratorRegister = () => {
     <div className="d-flex flex-column min-vh-100">
       <Navbar />
       
-      <div className="flex-grow-1 d-flex align-items-center justify-content-center bg-light py-5">
-        <Container className="py-5">
-          <Row className="justify-content-center">
-            <Col md={8} lg={6}>
-              <Card className="shadow border-0">
-                <Card.Body className="p-4">
-                  <h2 className="text-center mb-4">Moderator Registration</h2>
+      <Container className="flex-grow-1 py-5 mt-5">
+        <Row className="justify-content-center">
+          <Col md={8} lg={6} xl={5}>
+            <Card className="border-0 shadow-sm">
+              <Card.Body className="p-4 p-md-5">
+                <div className="text-center mb-4">
+                  <h2 className="h3 mb-1">Moderator Registration</h2>
+                  <p className="text-muted">Create a new moderator account</p>
+                </div>
+                
+                {errors.form && <Alert variant="danger">{errors.form}</Alert>}
+                
+                <Form onSubmit={handleSubmit}>
+                  <Form.Group className="mb-3">
+                    <Form.Label>Username</Form.Label>
+                    <Form.Control
+                      type="text"
+                      name="username"
+                      value={formData.username}
+                      onChange={handleChange}
+                      placeholder="Choose a username"
+                      isInvalid={!!errors.username}
+                    />
+                    <Form.Control.Feedback type="invalid">
+                      {errors.username}
+                    </Form.Control.Feedback>
+                  </Form.Group>
                   
-                  {error && (
-                    <Alert variant="danger" className="mb-4">
-                      {error}
-                    </Alert>
-                  )}
+                  <Form.Group className="mb-3">
+                    <Form.Label>Email address</Form.Label>
+                    <Form.Control
+                      type="email"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleChange}
+                      placeholder="Enter your email"
+                      isInvalid={!!errors.email}
+                    />
+                    <Form.Control.Feedback type="invalid">
+                      {errors.email}
+                    </Form.Control.Feedback>
+                  </Form.Group>
                   
-                  <Form onSubmit={handleSubmit}>
-                    <Row>
-                      <Col md={6}>
-                        <Form.Group className="mb-3">
-                          <Form.Label>Username*</Form.Label>
-                          <Form.Control
-                            name="username"
-                            type="text"
-                            value={formData.username}
-                            onChange={handleChange}
-                            required
-                          />
-                        </Form.Group>
-                      </Col>
-                      
-                      <Col md={6}>
-                        <Form.Group className="mb-3">
-                          <Form.Label>Email*</Form.Label>
-                          <Form.Control
-                            name="email"
-                            type="email"
-                            value={formData.email}
-                            onChange={handleChange}
-                            required
-                          />
-                        </Form.Group>
-                      </Col>
-                    </Row>
-                    
-                    <Form.Group className="mb-3">
-                      <Form.Label>Password*</Form.Label>
-                      <Form.Control
-                        name="password"
-                        type="password"
-                        value={formData.password}
-                        onChange={handleChange}
-                        required
-                      />
-                    </Form.Group>
-                    
-                    <Row>
-                      <Col md={6}>
-                        <Form.Group className="mb-3">
-                          <Form.Label>Country*</Form.Label>
-                          <Form.Control
-                            name="country"
-                            type="text"
-                            value={formData.country}
-                            onChange={handleChange}
-                            required
-                          />
-                        </Form.Group>
-                      </Col>
-                      
-                      <Col md={6}>
-                        <Form.Group className="mb-3">
-                          <Form.Label>City*</Form.Label>
-                          <Form.Control
-                            name="city"
-                            type="text"
-                            value={formData.city}
-                            onChange={handleChange}
-                            required
-                          />
-                        </Form.Group>
-                      </Col>
-                    </Row>
-                    
-                    <Form.Group className="mb-3">
-                      <Form.Label>Phone</Form.Label>
-                      <Form.Control
-                        name="phone"
-                        type="text"
-                        value={formData.phone}
-                        onChange={handleChange}
-                      />
-                    </Form.Group>
-                    
-                    <Form.Group className="mb-4">
-                      <Form.Label>
-                        Assigned Hotels
-                        {isLoadingHotels && (
-                          <Spinner 
-                            animation="border" 
-                            size="sm" 
-                            className="ms-2" 
-                          />
-                        )}
-                      </Form.Label>
-                      <Form.Select
-                        name="assignedHotels"
-                        multiple
-                        value={formData.assignedHotels}
-                        onChange={handleHotelChange}
-                        style={{ height: '150px' }}
-                      >
-                        {hotels.map(hotel => (
-                          <option key={hotel._id} value={hotel._id}>
-                            {hotel.name} - {hotel.city}
-                          </option>
-                        ))}
-                      </Form.Select>
-                      <Form.Text className="text-muted">
-                        Hold Ctrl/Cmd to select multiple hotels
-                      </Form.Text>
-                    </Form.Group>
-                    
-                    <Button
-                      type="submit"
-                      variant="primary"
-                      className="w-100"
-                      disabled={isLoading}
-                    >
-                      {isLoading ? (
-                        <>
-                          <Spinner
-                            as="span"
-                            animation="border"
-                            size="sm"
-                            role="status"
-                            aria-hidden="true"
-                            className="me-2"
-                          />
-                          Registering...
-                        </>
-                      ) : (
-                        'Register Moderator'
-                      )}
-                    </Button>
-                  </Form>
-                </Card.Body>
-              </Card>
-            </Col>
-          </Row>
-        </Container>
-      </div>
+                  <Form.Group className="mb-3">
+                    <Form.Label>Password</Form.Label>
+                    <Form.Control
+                      type="password"
+                      name="password"
+                      value={formData.password}
+                      onChange={handleChange}
+                      placeholder="Create a password"
+                      isInvalid={!!errors.password}
+                    />
+                    <Form.Control.Feedback type="invalid">
+                      {errors.password}
+                    </Form.Control.Feedback>
+                  </Form.Group>
+                  
+                  <Form.Group className="mb-3">
+                    <Form.Label>Confirm Password</Form.Label>
+                    <Form.Control
+                      type="password"
+                      name="confirmPassword"
+                      value={formData.confirmPassword}
+                      onChange={handleChange}
+                      placeholder="Confirm your password"
+                      isInvalid={!!errors.confirmPassword}
+                    />
+                    <Form.Control.Feedback type="invalid">
+                      {errors.confirmPassword}
+                    </Form.Control.Feedback>
+                  </Form.Group>
+                  
+                  <Form.Group className="mb-4">
+                    <Form.Label>Moderator Registration Code</Form.Label>
+                    <Form.Control
+                      type="text"
+                      name="registrationCode"
+                      value={formData.registrationCode}
+                      onChange={handleChange}
+                      placeholder="Enter registration code"
+                      isInvalid={!!errors.registrationCode}
+                    />
+                    <Form.Control.Feedback type="invalid">
+                      {errors.registrationCode}
+                    </Form.Control.Feedback>
+                    <Form.Text className="text-muted">
+                      This code is provided by system administrators.
+                    </Form.Text>
+                  </Form.Group>
+                  
+                  <Button 
+                    variant="primary" 
+                    type="submit" 
+                    className="w-100 py-2 mb-3"
+                    disabled={loading}
+                  >
+                    {loading ? 'Creating Account...' : 'Register as Moderator'}
+                  </Button>
+                  
+                  <div className="text-center">
+                    <p className="text-muted mb-0">Already have an account?{' '}
+                      <Link to="/moderator-login" className="text-decoration-none">
+                        Moderator Login
+                      </Link>
+                    </p>
+                  </div>
+                </Form>
+              </Card.Body>
+            </Card>
+          </Col>
+        </Row>
+      </Container>
       
       <Footer />
     </div>

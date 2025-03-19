@@ -1,326 +1,361 @@
 
-import { useState, useEffect } from 'react';
-import { useAuth } from '@/context/AuthContext';
-import AuthGuard from '@/components/AuthGuard';
+import React, { useState, useEffect } from 'react';
+import { Container, Row, Col, Card, Table, Button, Badge, Spinner } from 'react-bootstrap';
+import { Link } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import { useAuth } from '@/context/AuthContext';
 import { toast } from 'sonner';
-import { workerAPI } from '@/services/api';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { 
-  Card, 
-  CardContent, 
-  CardDescription, 
-  CardFooter, 
-  CardHeader, 
-  CardTitle 
-} from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { 
-  BedDouble, 
-  User, 
-  RefreshCw, 
-  Check, 
-  Clock, 
-  CheckCircle2, 
-  Building
-} from 'lucide-react';
 
 const WorkerDashboard = () => {
   const { state } = useAuth();
   const { user } = state;
-  
+  const [bookings, setBookings] = useState([]);
+  const [rooms, setRooms] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [workerProfile, setWorkerProfile] = useState(null);
-  const [pendingRooms, setPendingRooms] = useState([]);
-  const [completedRooms, setCompletedRooms] = useState([]);
-  
-  // Load worker data
+  const [activeTab, setActiveTab] = useState('bookings');
+
   useEffect(() => {
-    const fetchWorkerData = async () => {
-      if (!user || !user._id) return;
-      
+    const fetchData = async () => {
+      setLoading(true);
       try {
-        setLoading(true);
+        // Mock data for demonstration
+        const mockBookings = [
+          {
+            _id: 'b1',
+            hotelName: 'Grand Hotel',
+            roomName: 'Deluxe Suite',
+            checkIn: new Date().toISOString(),
+            checkOut: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
+            guestName: 'John Smith',
+            status: 'confirmed',
+            totalPrice: 750,
+          },
+          {
+            _id: 'b2',
+            hotelName: 'Seaside Resort',
+            roomName: 'Ocean View Room',
+            checkIn: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+            checkOut: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString(),
+            guestName: 'Emma Johnson',
+            status: 'pending',
+            totalPrice: 450,
+          }
+        ];
         
-        // Find worker profile
-        const workers = await workerAPI.getAllWorkers();
-        const userWorker = workers.find(worker => worker.userId === user._id);
-        
-        if (userWorker) {
-          setWorkerProfile(userWorker);
-          
-          // Get pending rooms
-          const pending = userWorker.assignedRooms || [];
-          setPendingRooms(pending);
-          
-          // Get completed rooms
-          const completed = userWorker.cleanedRooms || [];
-          setCompletedRooms(completed);
-        }
+        const mockRooms = [
+          {
+            _id: 'r1',
+            name: 'Deluxe Suite',
+            hotelName: 'Grand Hotel',
+            status: 'available',
+            price: 250,
+            capacity: 2,
+          },
+          {
+            _id: 'r2',
+            name: 'Ocean View Room',
+            hotelName: 'Seaside Resort',
+            status: 'booked',
+            price: 150,
+            capacity: 2,
+          },
+          {
+            _id: 'r3',
+            name: 'Presidential Suite',
+            hotelName: 'Grand Hotel',
+            status: 'maintenance',
+            price: 500,
+            capacity: 4,
+          }
+        ];
+
+        setBookings(mockBookings);
+        setRooms(mockRooms);
       } catch (error) {
-        console.error('Error fetching worker data:', error);
-        toast.error('Failed to load worker data');
+        console.error('Error fetching data:', error);
+        toast.error('Failed to load dashboard data');
       } finally {
         setLoading(false);
       }
     };
-    
-    fetchWorkerData();
-  }, [user]);
 
-  const handleMarkAsCompleted = async (roomId) => {
-    if (!workerProfile) return;
-    
-    try {
-      await workerAPI.markRoomAsCleaned(workerProfile._id, roomId);
-      
-      // Update local data
-      const updatedPendingRooms = pendingRooms.filter(room => room.roomId._id !== roomId);
-      setPendingRooms(updatedPendingRooms);
-      
-      // Add to completed rooms
-      const nowDate = new Date();
-      const newCompletedRoom = { 
-        roomId: pendingRooms.find(room => room.roomId._id === roomId).roomId,
-        cleanedAt: nowDate
-      };
-      setCompletedRooms([newCompletedRoom, ...completedRooms]);
-      
-      toast.success('Room marked as cleaned');
-    } catch (error) {
-      console.error('Error marking room as cleaned:', error);
-      toast.error('Failed to mark room as cleaned');
+    fetchData();
+  }, []);
+
+  const handleRoomStatusChange = (roomId, newStatus) => {
+    setRooms(prevRooms => 
+      prevRooms.map(room => 
+        room._id === roomId ? { ...room, status: newStatus } : room
+      )
+    );
+    toast.success(`Room status updated to ${newStatus}`);
+  };
+
+  const handleBookingStatusChange = (bookingId, newStatus) => {
+    setBookings(prevBookings => 
+      prevBookings.map(booking => 
+        booking._id === bookingId ? { ...booking, status: newStatus } : booking
+      )
+    );
+    toast.success(`Booking status updated to ${newStatus}`);
+  };
+
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString();
+  };
+
+  const getStatusBadge = (status) => {
+    switch (status) {
+      case 'confirmed':
+        return <Badge bg="success">Confirmed</Badge>;
+      case 'pending':
+        return <Badge bg="warning">Pending</Badge>;
+      case 'cancelled':
+        return <Badge bg="danger">Cancelled</Badge>;
+      case 'available':
+        return <Badge bg="success">Available</Badge>;
+      case 'booked':
+        return <Badge bg="danger">Booked</Badge>;
+      case 'maintenance':
+        return <Badge bg="warning">Maintenance</Badge>;
+      default:
+        return <Badge bg="secondary">{status}</Badge>;
     }
   };
 
-  return (
-    <AuthGuard requireWorker={true}>
-      <div className="flex flex-col min-h-screen">
+  if (!user || !user.isWorker) {
+    return (
+      <div className="d-flex flex-column min-vh-100">
         <Navbar />
-        
-        <main className="flex-grow py-12 px-4 bg-gray-50">
-          <div className="container mx-auto max-w-6xl">
-            <div className="flex flex-col md:flex-row justify-between items-start mb-8">
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900">Worker Dashboard</h1>
-                <p className="text-gray-600">Manage your assigned tasks and cleaning responsibilities</p>
-              </div>
-              
-              {workerProfile && (
-                <div className="mt-4 md:mt-0">
-                  <div className="inline-flex items-center px-4 py-2 bg-blue-100 rounded-lg">
-                    <Building className="h-5 w-5 text-blue-600 mr-2" />
-                    <span className="font-medium text-blue-800">{workerProfile.hotelId.name}</span>
-                  </div>
-                </div>
-              )}
-            </div>
-            
-            {loading ? (
-              <div className="flex justify-center items-center py-12">
-                <RefreshCw className="h-8 w-8 animate-spin text-hotel-500" />
-                <span className="ml-2 text-gray-600">Loading dashboard...</span>
-              </div>
-            ) : workerProfile ? (
-              <div className="space-y-8">
-                {/* Worker profile card */}
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle>Worker Profile</CardTitle>
-                    <CardDescription>Your role and information</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <h3 className="text-sm font-medium text-gray-500">Name</h3>
-                        <p className="text-lg font-semibold">{workerProfile.name}</p>
-                      </div>
-                      <div>
-                        <h3 className="text-sm font-medium text-gray-500">Role</h3>
-                        <p className="text-lg font-semibold capitalize">{workerProfile.role}</p>
-                      </div>
-                      <div>
-                        <h3 className="text-sm font-medium text-gray-500">Email</h3>
-                        <p className="text-lg">{workerProfile.email}</p>
-                      </div>
-                      <div>
-                        <h3 className="text-sm font-medium text-gray-500">Phone</h3>
-                        <p className="text-lg">{workerProfile.phone || 'Not provided'}</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-                
-                {/* Tasks tabs */}
-                <Tabs defaultValue="pending" className="w-full">
-                  <TabsList className="mb-6">
-                    <TabsTrigger value="pending" className="flex items-center">
-                      <Clock className="h-4 w-4 mr-2" />
-                      Pending Tasks ({pendingRooms.length})
-                    </TabsTrigger>
-                    <TabsTrigger value="completed" className="flex items-center">
-                      <CheckCircle2 className="h-4 w-4 mr-2" />
-                      Completed Tasks ({completedRooms.length})
-                    </TabsTrigger>
-                  </TabsList>
-                  
-                  {/* Pending tasks */}
-                  <TabsContent value="pending">
-                    {pendingRooms.length === 0 ? (
-                      <Card>
-                        <CardContent className="flex flex-col items-center justify-center py-12">
-                          <Clock className="h-12 w-12 text-gray-300 mb-4" />
-                          <h3 className="text-lg font-medium mb-2">No pending tasks</h3>
-                          <p className="text-gray-500 mb-4 text-center">
-                            You don't have any rooms assigned for cleaning right now
-                          </p>
-                        </CardContent>
-                      </Card>
-                    ) : (
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {pendingRooms.map((assignment) => (
-                          <Card key={assignment.roomId._id} className="overflow-hidden">
-                            <div className="bg-amber-50 px-4 py-2 border-b border-amber-200">
-                              <div className="flex justify-between items-center">
-                                <h3 className="font-semibold text-amber-800">
-                                  Room {assignment.roomId.roomNumbers[0]?.number || 'N/A'}
-                                </h3>
-                                <span className="text-xs bg-amber-200 text-amber-800 px-2 py-0.5 rounded-full">
-                                  Pending
-                                </span>
-                              </div>
-                            </div>
-                            <CardContent className="pt-4">
-                              <p className="font-medium mb-1">{assignment.roomId.title}</p>
-                              <p className="text-sm text-gray-600 mb-3">
-                                {assignment.roomId.desc}
-                              </p>
-                              <div className="text-xs text-gray-500 mb-4">
-                                <p>Assigned on: {new Date(assignment.assignedAt).toLocaleDateString()}</p>
-                              </div>
-                              <Button 
-                                onClick={() => handleMarkAsCompleted(assignment.roomId._id)}
-                                className="w-full bg-green-600 hover:bg-green-700"
-                              >
-                                <Check className="h-4 w-4 mr-2" />
-                                Mark as Cleaned
-                              </Button>
-                            </CardContent>
-                          </Card>
-                        ))}
-                      </div>
-                    )}
-                  </TabsContent>
-                  
-                  {/* Completed tasks */}
-                  <TabsContent value="completed">
-                    {completedRooms.length === 0 ? (
-                      <Card>
-                        <CardContent className="flex flex-col items-center justify-center py-12">
-                          <CheckCircle2 className="h-12 w-12 text-gray-300 mb-4" />
-                          <h3 className="text-lg font-medium mb-2">No completed tasks</h3>
-                          <p className="text-gray-500 mb-4 text-center">
-                            You haven't completed any cleaning tasks yet
-                          </p>
-                        </CardContent>
-                      </Card>
-                    ) : (
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {completedRooms.map((completed, index) => (
-                          <Card key={index} className="overflow-hidden">
-                            <div className="bg-green-50 px-4 py-2 border-b border-green-200">
-                              <div className="flex justify-between items-center">
-                                <h3 className="font-semibold text-green-800">
-                                  Room {completed.roomId.roomNumbers?.[0]?.number || 'N/A'}
-                                </h3>
-                                <span className="text-xs bg-green-200 text-green-800 px-2 py-0.5 rounded-full">
-                                  Completed
-                                </span>
-                              </div>
-                            </div>
-                            <CardContent className="pt-4">
-                              <p className="font-medium mb-1">{completed.roomId.title || 'Room'}</p>
-                              <p className="text-sm text-gray-600 mb-3">
-                                {completed.roomId.desc || 'Standard room'}
-                              </p>
-                              <div className="text-xs text-gray-500">
-                                <p>Cleaned on: {new Date(completed.cleanedAt).toLocaleDateString()}</p>
-                              </div>
-                            </CardContent>
-                          </Card>
-                        ))}
-                      </div>
-                    )}
-                  </TabsContent>
-                </Tabs>
-                
-                {/* Stats summary */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <Card>
-                    <CardContent className="pt-6">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-sm font-medium text-gray-500">Pending Tasks</p>
-                          <p className="text-3xl font-bold">{pendingRooms.length}</p>
-                        </div>
-                        <div className="h-12 w-12 bg-amber-100 rounded-full flex items-center justify-center">
-                          <Clock className="h-6 w-6 text-amber-600" />
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                  
-                  <Card>
-                    <CardContent className="pt-6">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-sm font-medium text-gray-500">Completed Tasks</p>
-                          <p className="text-3xl font-bold">{completedRooms.length}</p>
-                        </div>
-                        <div className="h-12 w-12 bg-green-100 rounded-full flex items-center justify-center">
-                          <CheckCircle2 className="h-6 w-6 text-green-600" />
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                  
-                  <Card>
-                    <CardContent className="pt-6">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-sm font-medium text-gray-500">Completion Rate</p>
-                          <p className="text-3xl font-bold">
-                            {pendingRooms.length + completedRooms.length === 0 
-                              ? '0%' 
-                              : `${Math.round(completedRooms.length / (pendingRooms.length + completedRooms.length) * 100)}%`}
-                          </p>
-                        </div>
-                        <div className="h-12 w-12 bg-blue-100 rounded-full flex items-center justify-center">
-                          <BedDouble className="h-6 w-6 text-blue-600" />
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-              </div>
-            ) : (
-              <Card>
-                <CardContent className="flex flex-col items-center justify-center py-12">
-                  <User className="h-12 w-12 text-gray-300 mb-4" />
-                  <h3 className="text-lg font-medium mb-2">Not a Worker</h3>
-                  <p className="text-gray-500 mb-4 text-center">
-                    Your account is not registered as a worker in our system.
-                  </p>
-                </CardContent>
-              </Card>
-            )}
-          </div>
-        </main>
-        
+        <Container className="flex-grow-1 py-5 mt-5 text-center">
+          <h2>Access Denied</h2>
+          <p>You need worker privileges to access this dashboard.</p>
+          <Link to="/" className="btn btn-primary mt-3">
+            Return to Home
+          </Link>
+        </Container>
         <Footer />
       </div>
-    </AuthGuard>
+    );
+  }
+
+  return (
+    <div className="d-flex flex-column min-vh-100">
+      <Navbar />
+      
+      <Container className="flex-grow-1 py-5 mt-5">
+        <Row className="mb-4">
+          <Col>
+            <h2 className="mb-3">Worker Dashboard</h2>
+            <p className="text-muted">
+              Welcome back, {user.username}. Manage hotel operations and bookings from here.
+            </p>
+          </Col>
+        </Row>
+
+        <Row className="mb-4">
+          <Col>
+            <div className="d-flex mb-3">
+              <Button 
+                variant={activeTab === 'bookings' ? 'primary' : 'outline-primary'} 
+                className="me-2"
+                onClick={() => setActiveTab('bookings')}
+              >
+                Bookings
+              </Button>
+              <Button 
+                variant={activeTab === 'rooms' ? 'primary' : 'outline-primary'} 
+                onClick={() => setActiveTab('rooms')}
+              >
+                Rooms
+              </Button>
+            </div>
+          </Col>
+        </Row>
+
+        {loading ? (
+          <div className="text-center py-5">
+            <Spinner animation="border" role="status" variant="primary">
+              <span className="visually-hidden">Loading...</span>
+            </Spinner>
+          </div>
+        ) : (
+          <>
+            {activeTab === 'bookings' && (
+              <Card className="shadow-sm">
+                <Card.Header className="bg-white">
+                  <h5 className="mb-0">Recent Bookings</h5>
+                </Card.Header>
+                <Card.Body className="p-0">
+                  <div className="table-responsive">
+                    <Table hover className="mb-0">
+                      <thead className="bg-light">
+                        <tr>
+                          <th>ID</th>
+                          <th>Guest</th>
+                          <th>Hotel & Room</th>
+                          <th>Check-in</th>
+                          <th>Check-out</th>
+                          <th>Price</th>
+                          <th>Status</th>
+                          <th>Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {bookings.length > 0 ? (
+                          bookings.map((booking) => (
+                            <tr key={booking._id}>
+                              <td>{booking._id}</td>
+                              <td>{booking.guestName}</td>
+                              <td>
+                                {booking.hotelName}
+                                <br />
+                                <small className="text-muted">{booking.roomName}</small>
+                              </td>
+                              <td>{formatDate(booking.checkIn)}</td>
+                              <td>{formatDate(booking.checkOut)}</td>
+                              <td>${booking.totalPrice}</td>
+                              <td>{getStatusBadge(booking.status)}</td>
+                              <td>
+                                <div className="d-flex gap-2">
+                                  {booking.status === 'pending' && (
+                                    <>
+                                      <Button 
+                                        size="sm" 
+                                        variant="success"
+                                        onClick={() => handleBookingStatusChange(booking._id, 'confirmed')}
+                                      >
+                                        Confirm
+                                      </Button>
+                                      <Button 
+                                        size="sm" 
+                                        variant="danger"
+                                        onClick={() => handleBookingStatusChange(booking._id, 'cancelled')}
+                                      >
+                                        Cancel
+                                      </Button>
+                                    </>
+                                  )}
+                                  {booking.status === 'confirmed' && (
+                                    <Button 
+                                      size="sm" 
+                                      variant="danger"
+                                      onClick={() => handleBookingStatusChange(booking._id, 'cancelled')}
+                                    >
+                                      Cancel
+                                    </Button>
+                                  )}
+                                </div>
+                              </td>
+                            </tr>
+                          ))
+                        ) : (
+                          <tr>
+                            <td colSpan="8" className="text-center py-4">
+                              No bookings found
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </Table>
+                  </div>
+                </Card.Body>
+              </Card>
+            )}
+
+            {activeTab === 'rooms' && (
+              <Card className="shadow-sm">
+                <Card.Header className="bg-white">
+                  <h5 className="mb-0">Room Management</h5>
+                </Card.Header>
+                <Card.Body className="p-0">
+                  <div className="table-responsive">
+                    <Table hover className="mb-0">
+                      <thead className="bg-light">
+                        <tr>
+                          <th>ID</th>
+                          <th>Room</th>
+                          <th>Hotel</th>
+                          <th>Price/Night</th>
+                          <th>Capacity</th>
+                          <th>Status</th>
+                          <th>Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {rooms.length > 0 ? (
+                          rooms.map((room) => (
+                            <tr key={room._id}>
+                              <td>{room._id}</td>
+                              <td>{room.name}</td>
+                              <td>{room.hotelName}</td>
+                              <td>${room.price}</td>
+                              <td>{room.capacity} guests</td>
+                              <td>{getStatusBadge(room.status)}</td>
+                              <td>
+                                <div className="dropdown">
+                                  <Button 
+                                    variant="outline-secondary" 
+                                    size="sm" 
+                                    className="dropdown-toggle" 
+                                    data-bs-toggle="dropdown"
+                                    aria-expanded="false"
+                                  >
+                                    Set Status
+                                  </Button>
+                                  <ul className="dropdown-menu">
+                                    <li>
+                                      <Button 
+                                        variant="link" 
+                                        className="dropdown-item"
+                                        onClick={() => handleRoomStatusChange(room._id, 'available')}
+                                      >
+                                        Available
+                                      </Button>
+                                    </li>
+                                    <li>
+                                      <Button 
+                                        variant="link" 
+                                        className="dropdown-item"
+                                        onClick={() => handleRoomStatusChange(room._id, 'booked')}
+                                      >
+                                        Booked
+                                      </Button>
+                                    </li>
+                                    <li>
+                                      <Button 
+                                        variant="link" 
+                                        className="dropdown-item"
+                                        onClick={() => handleRoomStatusChange(room._id, 'maintenance')}
+                                      >
+                                        Maintenance
+                                      </Button>
+                                    </li>
+                                  </ul>
+                                </div>
+                              </td>
+                            </tr>
+                          ))
+                        ) : (
+                          <tr>
+                            <td colSpan="7" className="text-center py-4">
+                              No rooms found
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </Table>
+                  </div>
+                </Card.Body>
+              </Card>
+            )}
+          </>
+        )}
+      </Container>
+      
+      <Footer />
+    </div>
   );
 };
 

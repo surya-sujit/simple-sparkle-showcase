@@ -1,182 +1,228 @@
 
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Container, Row, Col, Card, Form, Button, Alert } from 'react-bootstrap';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '@/context/AuthContext';
+import Navbar from '@/components/Navbar';
+import Footer from '@/components/Footer';
 import { toast } from 'sonner';
-import { authAPI, adminAPI } from '../services/api';
 
 const AdminRegister = () => {
   const [formData, setFormData] = useState({
     username: '',
     email: '',
     password: '',
-    country: '',
-    city: '',
-    phone: '',
-    superAdmin: false
+    confirmPassword: '',
+    registrationCode: ''
   });
-  const [isLoading, setIsLoading] = useState(false);
+  const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(false);
+  
+  const { register } = useAuth();
   const navigate = useNavigate();
 
   const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
     setFormData({
       ...formData,
-      [name]: type === 'checkbox' ? checked : value
+      [e.target.name]: e.target.value,
     });
+    
+    // Clear error for the field when user types
+    if (errors[e.target.name]) {
+      setErrors({
+        ...errors,
+        [e.target.name]: null
+      });
+    }
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+    
+    if (!formData.username.trim()) {
+      newErrors.username = 'Username is required';
+    }
+    
+    if (!formData.email.trim()) {
+      newErrors.email = 'Email is required';
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      newErrors.email = 'Email is invalid';
+    }
+    
+    if (!formData.password) {
+      newErrors.password = 'Password is required';
+    } else if (formData.password.length < 6) {
+      newErrors.password = 'Password must be at least 6 characters';
+    }
+    
+    if (formData.password !== formData.confirmPassword) {
+      newErrors.confirmPassword = 'Passwords do not match';
+    }
+    
+    if (!formData.registrationCode) {
+      newErrors.registrationCode = 'Registration code is required';
+    } else if (formData.registrationCode !== 'ADMIN123') { // Simple mock validation
+      newErrors.registrationCode = 'Invalid registration code';
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    const { username, email, password, country, city, phone, superAdmin } = formData;
-    
-    if (!username || !email || !password || !country || !city) {
-      toast.error('Please fill in all required fields');
+    if (!validateForm()) {
       return;
     }
     
+    setLoading(true);
+    
     try {
-      setIsLoading(true);
+      // This is a mock admin registration for demonstration
+      await new Promise(resolve => setTimeout(resolve, 800));
       
-      // First register user
-      const userResponse = await authAPI.register({
-        username,
-        email,
-        password,
-        country,
-        city,
-        phone
-      });
+      // Include admin role in user data
+      const userData = {
+        username: formData.username,
+        email: formData.email,
+        isAdmin: true,
+        isWorker: false,
+        isModerator: false,
+      };
       
-      if (userResponse.user && userResponse.user._id) {
-        // Then create admin profile
-        await adminAPI.createAdmin({
-          userId: userResponse.user._id,
-          superAdmin,
-          permissions: {
-            manageUsers: true,
-            manageHotels: true,
-            manageModerators: true,
-            viewReports: true
-          }
-        });
-        
-        toast.success('Admin registered successfully');
-        navigate('/admin-login');
-      }
+      await register(userData);
+      toast.success('Admin registration successful');
+      navigate('/admin');
     } catch (error) {
-      toast.error(error.message || 'Registration failed');
+      console.error('Registration error:', error);
+      setErrors({
+        form: 'Registration failed. Please try again.',
+      });
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gray-100">
-      <div className="w-full max-w-md p-8 bg-white rounded-lg shadow-md">
-        <h1 className="text-2xl font-bold text-center mb-6">Admin Registration</h1>
-        
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label htmlFor="username" className="block text-sm font-medium mb-1">Username*</label>
-            <input
-              id="username"
-              name="username"
-              type="text"
-              value={formData.username}
-              onChange={handleChange}
-              className="w-full p-2 border rounded"
-              required
-            />
-          </div>
-          
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium mb-1">Email*</label>
-            <input
-              id="email"
-              name="email"
-              type="email"
-              value={formData.email}
-              onChange={handleChange}
-              className="w-full p-2 border rounded"
-              required
-            />
-          </div>
-          
-          <div>
-            <label htmlFor="password" className="block text-sm font-medium mb-1">Password*</label>
-            <input
-              id="password"
-              name="password"
-              type="password"
-              value={formData.password}
-              onChange={handleChange}
-              className="w-full p-2 border rounded"
-              required
-            />
-          </div>
-          
-          <div>
-            <label htmlFor="country" className="block text-sm font-medium mb-1">Country*</label>
-            <input
-              id="country"
-              name="country"
-              type="text"
-              value={formData.country}
-              onChange={handleChange}
-              className="w-full p-2 border rounded"
-              required
-            />
-          </div>
-          
-          <div>
-            <label htmlFor="city" className="block text-sm font-medium mb-1">City*</label>
-            <input
-              id="city"
-              name="city"
-              type="text"
-              value={formData.city}
-              onChange={handleChange}
-              className="w-full p-2 border rounded"
-              required
-            />
-          </div>
-          
-          <div>
-            <label htmlFor="phone" className="block text-sm font-medium mb-1">Phone</label>
-            <input
-              id="phone"
-              name="phone"
-              type="text"
-              value={formData.phone}
-              onChange={handleChange}
-              className="w-full p-2 border rounded"
-            />
-          </div>
-          
-          <div className="flex items-center">
-            <input
-              id="superAdmin"
-              name="superAdmin"
-              type="checkbox"
-              checked={formData.superAdmin}
-              onChange={handleChange}
-              className="h-4 w-4 text-blue-600 border-gray-300 rounded"
-            />
-            <label htmlFor="superAdmin" className="ml-2 block text-sm">
-              Super Admin
-            </label>
-          </div>
-          
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="w-full py-2 px-4 bg-hotel-500 text-white rounded hover:bg-hotel-600 disabled:opacity-50"
-          >
-            {isLoading ? 'Registering...' : 'Register Admin'}
-          </button>
-        </form>
-      </div>
+    <div className="d-flex flex-column min-vh-100">
+      <Navbar />
+      
+      <Container className="flex-grow-1 py-5 mt-5">
+        <Row className="justify-content-center">
+          <Col md={8} lg={6} xl={5}>
+            <Card className="border-0 shadow-sm">
+              <Card.Body className="p-4 p-md-5">
+                <div className="text-center mb-4">
+                  <h2 className="h3 mb-1">Admin Registration</h2>
+                  <p className="text-muted">Create a new administrator account</p>
+                </div>
+                
+                {errors.form && <Alert variant="danger">{errors.form}</Alert>}
+                
+                <Form onSubmit={handleSubmit}>
+                  <Form.Group className="mb-3">
+                    <Form.Label>Username</Form.Label>
+                    <Form.Control
+                      type="text"
+                      name="username"
+                      value={formData.username}
+                      onChange={handleChange}
+                      placeholder="Choose a username"
+                      isInvalid={!!errors.username}
+                    />
+                    <Form.Control.Feedback type="invalid">
+                      {errors.username}
+                    </Form.Control.Feedback>
+                  </Form.Group>
+                  
+                  <Form.Group className="mb-3">
+                    <Form.Label>Email address</Form.Label>
+                    <Form.Control
+                      type="email"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleChange}
+                      placeholder="Enter your email"
+                      isInvalid={!!errors.email}
+                    />
+                    <Form.Control.Feedback type="invalid">
+                      {errors.email}
+                    </Form.Control.Feedback>
+                  </Form.Group>
+                  
+                  <Form.Group className="mb-3">
+                    <Form.Label>Password</Form.Label>
+                    <Form.Control
+                      type="password"
+                      name="password"
+                      value={formData.password}
+                      onChange={handleChange}
+                      placeholder="Create a password"
+                      isInvalid={!!errors.password}
+                    />
+                    <Form.Control.Feedback type="invalid">
+                      {errors.password}
+                    </Form.Control.Feedback>
+                  </Form.Group>
+                  
+                  <Form.Group className="mb-3">
+                    <Form.Label>Confirm Password</Form.Label>
+                    <Form.Control
+                      type="password"
+                      name="confirmPassword"
+                      value={formData.confirmPassword}
+                      onChange={handleChange}
+                      placeholder="Confirm your password"
+                      isInvalid={!!errors.confirmPassword}
+                    />
+                    <Form.Control.Feedback type="invalid">
+                      {errors.confirmPassword}
+                    </Form.Control.Feedback>
+                  </Form.Group>
+                  
+                  <Form.Group className="mb-4">
+                    <Form.Label>Admin Registration Code</Form.Label>
+                    <Form.Control
+                      type="text"
+                      name="registrationCode"
+                      value={formData.registrationCode}
+                      onChange={handleChange}
+                      placeholder="Enter registration code"
+                      isInvalid={!!errors.registrationCode}
+                    />
+                    <Form.Control.Feedback type="invalid">
+                      {errors.registrationCode}
+                    </Form.Control.Feedback>
+                    <Form.Text className="text-muted">
+                      This code is provided by system administrators.
+                    </Form.Text>
+                  </Form.Group>
+                  
+                  <Button 
+                    variant="primary" 
+                    type="submit" 
+                    className="w-100 py-2 mb-3"
+                    disabled={loading}
+                  >
+                    {loading ? 'Creating Account...' : 'Register as Admin'}
+                  </Button>
+                  
+                  <div className="text-center">
+                    <p className="text-muted mb-0">Already have an account?{' '}
+                      <Link to="/admin-login" className="text-decoration-none">
+                        Admin Login
+                      </Link>
+                    </p>
+                  </div>
+                </Form>
+              </Card.Body>
+            </Card>
+          </Col>
+        </Row>
+      </Container>
+      
+      <Footer />
     </div>
   );
 };
