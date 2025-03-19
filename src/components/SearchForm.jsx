@@ -1,16 +1,13 @@
 
 import React, { useState, useEffect } from 'react';
-import { format } from 'date-fns';
-import { Calendar } from '@/components/ui/calendar';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Slider } from '@/components/ui/slider';
-import { cn } from '@/lib/utils';
-import { CalendarIcon, Users, MapPin, Search, DollarSign } from 'lucide-react';
+import { Form, Row, Col, Button, InputGroup } from 'react-bootstrap';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
+import { useNavigate } from 'react-router-dom';
 
 const SearchForm = ({ initialValues = {}, onSearch }) => {
+  const navigate = useNavigate();
+  
   const [searchParams, setSearchParams] = useState({
     city: '',
     checkIn: null,
@@ -21,11 +18,6 @@ const SearchForm = ({ initialValues = {}, onSearch }) => {
     ...initialValues
   });
 
-  const [priceRange, setPriceRange] = useState([
-    searchParams.minPrice || 0,
-    searchParams.maxPrice || 1000
-  ]);
-
   // Update the search params when initialValues changes
   useEffect(() => {
     if (initialValues) {
@@ -33,11 +25,6 @@ const SearchForm = ({ initialValues = {}, onSearch }) => {
         ...prev,
         ...initialValues
       }));
-      
-      setPriceRange([
-        initialValues.minPrice || 0,
-        initialValues.maxPrice || 1000
-      ]);
     }
   }, [initialValues]);
 
@@ -59,160 +46,181 @@ const SearchForm = ({ initialValues = {}, onSearch }) => {
     }
   };
 
-  const handlePriceRangeChange = (value) => {
-    setPriceRange(value);
+  const handlePriceRangeChange = (e) => {
+    const { name, value } = e.target;
     setSearchParams(prev => ({
       ...prev,
-      minPrice: value[0],
-      maxPrice: value[1]
+      [name]: parseInt(value)
     }));
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSearch(searchParams);
+    
+    // Create URL search params
+    const params = new URLSearchParams();
+    if (searchParams.city) params.append('city', searchParams.city);
+    if (searchParams.checkIn) params.append('checkIn', searchParams.checkIn.toISOString());
+    if (searchParams.checkOut) params.append('checkOut', searchParams.checkOut.toISOString());
+    if (searchParams.guests) params.append('guests', searchParams.guests.toString());
+    if (searchParams.minPrice) params.append('minPrice', searchParams.minPrice.toString());
+    if (searchParams.maxPrice) params.append('maxPrice', searchParams.maxPrice.toString());
+    
+    // Navigate to hotels page with search parameters
+    navigate(`/hotels?${params.toString()}`);
+    
+    // Call onSearch if provided
+    if (onSearch) {
+      onSearch(searchParams);
+    }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    <Form onSubmit={handleSubmit} className="p-3 bg-white rounded shadow-sm">
+      <Row className="g-3">
         {/* Destination */}
-        <div>
-          <Label htmlFor="city">Destination</Label>
-          <div className="relative mt-1">
-            <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-            <Input
-              id="city"
-              name="city"
-              placeholder="City or destination"
-              value={searchParams.city}
-              onChange={handleInputChange}
-              className="pl-10"
-            />
-          </div>
-        </div>
+        <Col md={6} lg={3}>
+          <Form.Group>
+            <Form.Label>Destination</Form.Label>
+            <InputGroup>
+              <InputGroup.Text>
+                <i className="bi bi-geo-alt"></i>
+              </InputGroup.Text>
+              <Form.Control
+                type="text"
+                placeholder="City or destination"
+                name="city"
+                value={searchParams.city}
+                onChange={handleInputChange}
+              />
+            </InputGroup>
+          </Form.Group>
+        </Col>
 
         {/* Check-in Date */}
-        <div>
-          <Label>Check-in Date</Label>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                className={cn(
-                  "w-full mt-1 justify-start text-left font-normal",
-                  !searchParams.checkIn && "text-muted-foreground"
-                )}
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {searchParams.checkIn ? (
-                  format(searchParams.checkIn, "PPP")
-                ) : (
-                  "Select date"
-                )}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
-              <Calendar
-                mode="single"
-                selected={searchParams.checkIn}
-                onSelect={(date) =>
-                  setSearchParams(prev => ({ ...prev, checkIn: date }))
-                }
-                disabled={(date) => {
-                  const today = new Date();
-                  today.setHours(0, 0, 0, 0);
-                  return date < today;
-                }}
-                initialFocus
-              />
-            </PopoverContent>
-          </Popover>
-        </div>
+        <Col md={6} lg={3}>
+          <Form.Group>
+            <Form.Label>Check-in Date</Form.Label>
+            <DatePicker
+              selected={searchParams.checkIn}
+              onChange={(date) => setSearchParams(prev => ({ ...prev, checkIn: date }))}
+              selectsStart
+              startDate={searchParams.checkIn}
+              endDate={searchParams.checkOut}
+              minDate={new Date()}
+              customInput={
+                <InputGroup>
+                  <InputGroup.Text>
+                    <i className="bi bi-calendar"></i>
+                  </InputGroup.Text>
+                  <Form.Control
+                    placeholder="Select date"
+                    value={searchParams.checkIn ? searchParams.checkIn.toLocaleDateString() : ''}
+                    readOnly
+                  />
+                </InputGroup>
+              }
+              className="form-control"
+            />
+          </Form.Group>
+        </Col>
 
         {/* Check-out Date */}
-        <div>
-          <Label>Check-out Date</Label>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                className={cn(
-                  "w-full mt-1 justify-start text-left font-normal",
-                  !searchParams.checkOut && "text-muted-foreground"
-                )}
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {searchParams.checkOut ? (
-                  format(searchParams.checkOut, "PPP")
-                ) : (
-                  "Select date"
-                )}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
-              <Calendar
-                mode="single"
-                selected={searchParams.checkOut}
-                onSelect={(date) =>
-                  setSearchParams(prev => ({ ...prev, checkOut: date }))
-                }
-                disabled={(date) => {
-                  const today = new Date();
-                  today.setHours(0, 0, 0, 0);
-                  return date < today || (searchParams.checkIn && date <= searchParams.checkIn);
-                }}
-                initialFocus
-              />
-            </PopoverContent>
-          </Popover>
-        </div>
+        <Col md={6} lg={3}>
+          <Form.Group>
+            <Form.Label>Check-out Date</Form.Label>
+            <DatePicker
+              selected={searchParams.checkOut}
+              onChange={(date) => setSearchParams(prev => ({ ...prev, checkOut: date }))}
+              selectsEnd
+              startDate={searchParams.checkIn}
+              endDate={searchParams.checkOut}
+              minDate={searchParams.checkIn || new Date()}
+              customInput={
+                <InputGroup>
+                  <InputGroup.Text>
+                    <i className="bi bi-calendar"></i>
+                  </InputGroup.Text>
+                  <Form.Control
+                    placeholder="Select date"
+                    value={searchParams.checkOut ? searchParams.checkOut.toLocaleDateString() : ''}
+                    readOnly
+                  />
+                </InputGroup>
+              }
+              className="form-control"
+            />
+          </Form.Group>
+        </Col>
 
         {/* Guests */}
-        <div>
-          <Label htmlFor="guests">Guests</Label>
-          <div className="relative mt-1">
-            <Users className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-            <Input
-              id="guests"
-              name="guests"
-              type="number"
-              min="1"
-              placeholder="Number of guests"
-              value={searchParams.guests}
-              onChange={handleGuestsChange}
-              className="pl-10"
-            />
-          </div>
-        </div>
-      </div>
+        <Col md={6} lg={3}>
+          <Form.Group>
+            <Form.Label>Guests</Form.Label>
+            <InputGroup>
+              <InputGroup.Text>
+                <i className="bi bi-people"></i>
+              </InputGroup.Text>
+              <Form.Control
+                type="number"
+                min="1"
+                placeholder="Number of guests"
+                name="guests"
+                value={searchParams.guests}
+                onChange={handleGuestsChange}
+              />
+            </InputGroup>
+          </Form.Group>
+        </Col>
+      </Row>
 
       {/* Price Range */}
-      <div>
-        <div className="flex justify-between items-center">
-          <Label className="mb-2">Price Range</Label>
-          <span className="text-sm">
-            ${priceRange[0]} - ${priceRange[1]}
-          </span>
-        </div>
-        <Slider
-          defaultValue={[0, 1000]}
-          value={priceRange}
-          onValueChange={handlePriceRangeChange}
-          min={0}
-          max={1000}
-          step={10}
-          className="my-4"
-        />
-      </div>
+      <Row className="mt-3">
+        <Col md={12}>
+          <Form.Group>
+            <div className="d-flex justify-content-between align-items-center mb-2">
+              <Form.Label className="mb-0">Price Range</Form.Label>
+              <span className="badge bg-light text-dark">
+                ${searchParams.minPrice} - ${searchParams.maxPrice}
+              </span>
+            </div>
+            <Row>
+              <Col xs={6}>
+                <Form.Label className="small">Min Price</Form.Label>
+                <Form.Control
+                  type="range"
+                  min="0"
+                  max="1000"
+                  step="10"
+                  name="minPrice"
+                  value={searchParams.minPrice}
+                  onChange={handlePriceRangeChange}
+                />
+              </Col>
+              <Col xs={6}>
+                <Form.Label className="small">Max Price</Form.Label>
+                <Form.Control
+                  type="range"
+                  min="0"
+                  max="1000"
+                  step="10"
+                  name="maxPrice"
+                  value={searchParams.maxPrice}
+                  onChange={handlePriceRangeChange}
+                />
+              </Col>
+            </Row>
+          </Form.Group>
+        </Col>
+      </Row>
 
-      <div className="flex justify-end">
-        <Button type="submit" className="bg-hotel-500 hover:bg-hotel-600">
-          <Search className="mr-2 h-4 w-4" />
+      <div className="d-flex justify-content-end mt-3">
+        <Button type="submit" variant="primary">
+          <i className="bi bi-search me-2"></i>
           Search Hotels
         </Button>
       </div>
-    </form>
+    </Form>
   );
 };
 

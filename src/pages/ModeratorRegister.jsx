@@ -1,8 +1,11 @@
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Form, Button, Container, Card, Row, Col, Spinner, Alert } from 'react-bootstrap';
 import { toast } from 'sonner';
 import { authAPI, moderatorAPI, hotelAPI } from '../services/api';
+import Navbar from '@/components/Navbar';
+import Footer from '@/components/Footer';
 
 const ModeratorRegister = () => {
   const [formData, setFormData] = useState({
@@ -17,6 +20,7 @@ const ModeratorRegister = () => {
   const [hotels, setHotels] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingHotels, setIsLoadingHotels] = useState(false);
+  const [error, setError] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -57,12 +61,13 @@ const ModeratorRegister = () => {
     const { username, email, password, country, city, phone, assignedHotels } = formData;
     
     if (!username || !email || !password || !country || !city) {
-      toast.error('Please fill in all required fields');
+      setError('Please fill in all required fields');
       return;
     }
     
     try {
       setIsLoading(true);
+      setError('');
       
       // First register user
       const userResponse = await authAPI.register({
@@ -91,126 +96,168 @@ const ModeratorRegister = () => {
         navigate('/moderator-login');
       }
     } catch (error) {
-      toast.error(error.message || 'Registration failed');
+      setError(error.message || 'Registration failed');
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gray-100">
-      <div className="w-full max-w-md p-8 bg-white rounded-lg shadow-md">
-        <h1 className="text-2xl font-bold text-center mb-6">Moderator Registration</h1>
-        
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label htmlFor="username" className="block text-sm font-medium mb-1">Username*</label>
-            <input
-              id="username"
-              name="username"
-              type="text"
-              value={formData.username}
-              onChange={handleChange}
-              className="w-full p-2 border rounded"
-              required
-            />
-          </div>
-          
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium mb-1">Email*</label>
-            <input
-              id="email"
-              name="email"
-              type="email"
-              value={formData.email}
-              onChange={handleChange}
-              className="w-full p-2 border rounded"
-              required
-            />
-          </div>
-          
-          <div>
-            <label htmlFor="password" className="block text-sm font-medium mb-1">Password*</label>
-            <input
-              id="password"
-              name="password"
-              type="password"
-              value={formData.password}
-              onChange={handleChange}
-              className="w-full p-2 border rounded"
-              required
-            />
-          </div>
-          
-          <div>
-            <label htmlFor="country" className="block text-sm font-medium mb-1">Country*</label>
-            <input
-              id="country"
-              name="country"
-              type="text"
-              value={formData.country}
-              onChange={handleChange}
-              className="w-full p-2 border rounded"
-              required
-            />
-          </div>
-          
-          <div>
-            <label htmlFor="city" className="block text-sm font-medium mb-1">City*</label>
-            <input
-              id="city"
-              name="city"
-              type="text"
-              value={formData.city}
-              onChange={handleChange}
-              className="w-full p-2 border rounded"
-              required
-            />
-          </div>
-          
-          <div>
-            <label htmlFor="phone" className="block text-sm font-medium mb-1">Phone</label>
-            <input
-              id="phone"
-              name="phone"
-              type="text"
-              value={formData.phone}
-              onChange={handleChange}
-              className="w-full p-2 border rounded"
-            />
-          </div>
-          
-          <div>
-            <label htmlFor="assignedHotels" className="block text-sm font-medium mb-1">
-              Assigned Hotels
-              {isLoadingHotels && <span className="ml-2 text-xs text-gray-500">(Loading...)</span>}
-            </label>
-            <select
-              id="assignedHotels"
-              name="assignedHotels"
-              multiple
-              value={formData.assignedHotels}
-              onChange={handleHotelChange}
-              className="w-full p-2 border rounded h-32"
-            >
-              {hotels.map(hotel => (
-                <option key={hotel._id} value={hotel._id}>
-                  {hotel.name} - {hotel.city}
-                </option>
-              ))}
-            </select>
-            <p className="text-xs text-gray-500 mt-1">Hold Ctrl/Cmd to select multiple hotels</p>
-          </div>
-          
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="w-full py-2 px-4 bg-hotel-500 text-white rounded hover:bg-hotel-600 disabled:opacity-50"
-          >
-            {isLoading ? 'Registering...' : 'Register Moderator'}
-          </button>
-        </form>
+    <div className="d-flex flex-column min-vh-100">
+      <Navbar />
+      
+      <div className="flex-grow-1 d-flex align-items-center justify-content-center bg-light py-5">
+        <Container className="py-5">
+          <Row className="justify-content-center">
+            <Col md={8} lg={6}>
+              <Card className="shadow border-0">
+                <Card.Body className="p-4">
+                  <h2 className="text-center mb-4">Moderator Registration</h2>
+                  
+                  {error && (
+                    <Alert variant="danger" className="mb-4">
+                      {error}
+                    </Alert>
+                  )}
+                  
+                  <Form onSubmit={handleSubmit}>
+                    <Row>
+                      <Col md={6}>
+                        <Form.Group className="mb-3">
+                          <Form.Label>Username*</Form.Label>
+                          <Form.Control
+                            name="username"
+                            type="text"
+                            value={formData.username}
+                            onChange={handleChange}
+                            required
+                          />
+                        </Form.Group>
+                      </Col>
+                      
+                      <Col md={6}>
+                        <Form.Group className="mb-3">
+                          <Form.Label>Email*</Form.Label>
+                          <Form.Control
+                            name="email"
+                            type="email"
+                            value={formData.email}
+                            onChange={handleChange}
+                            required
+                          />
+                        </Form.Group>
+                      </Col>
+                    </Row>
+                    
+                    <Form.Group className="mb-3">
+                      <Form.Label>Password*</Form.Label>
+                      <Form.Control
+                        name="password"
+                        type="password"
+                        value={formData.password}
+                        onChange={handleChange}
+                        required
+                      />
+                    </Form.Group>
+                    
+                    <Row>
+                      <Col md={6}>
+                        <Form.Group className="mb-3">
+                          <Form.Label>Country*</Form.Label>
+                          <Form.Control
+                            name="country"
+                            type="text"
+                            value={formData.country}
+                            onChange={handleChange}
+                            required
+                          />
+                        </Form.Group>
+                      </Col>
+                      
+                      <Col md={6}>
+                        <Form.Group className="mb-3">
+                          <Form.Label>City*</Form.Label>
+                          <Form.Control
+                            name="city"
+                            type="text"
+                            value={formData.city}
+                            onChange={handleChange}
+                            required
+                          />
+                        </Form.Group>
+                      </Col>
+                    </Row>
+                    
+                    <Form.Group className="mb-3">
+                      <Form.Label>Phone</Form.Label>
+                      <Form.Control
+                        name="phone"
+                        type="text"
+                        value={formData.phone}
+                        onChange={handleChange}
+                      />
+                    </Form.Group>
+                    
+                    <Form.Group className="mb-4">
+                      <Form.Label>
+                        Assigned Hotels
+                        {isLoadingHotels && (
+                          <Spinner 
+                            animation="border" 
+                            size="sm" 
+                            className="ms-2" 
+                          />
+                        )}
+                      </Form.Label>
+                      <Form.Select
+                        name="assignedHotels"
+                        multiple
+                        value={formData.assignedHotels}
+                        onChange={handleHotelChange}
+                        style={{ height: '150px' }}
+                      >
+                        {hotels.map(hotel => (
+                          <option key={hotel._id} value={hotel._id}>
+                            {hotel.name} - {hotel.city}
+                          </option>
+                        ))}
+                      </Form.Select>
+                      <Form.Text className="text-muted">
+                        Hold Ctrl/Cmd to select multiple hotels
+                      </Form.Text>
+                    </Form.Group>
+                    
+                    <Button
+                      type="submit"
+                      variant="primary"
+                      className="w-100"
+                      disabled={isLoading}
+                    >
+                      {isLoading ? (
+                        <>
+                          <Spinner
+                            as="span"
+                            animation="border"
+                            size="sm"
+                            role="status"
+                            aria-hidden="true"
+                            className="me-2"
+                          />
+                          Registering...
+                        </>
+                      ) : (
+                        'Register Moderator'
+                      )}
+                    </Button>
+                  </Form>
+                </Card.Body>
+              </Card>
+            </Col>
+          </Row>
+        </Container>
       </div>
+      
+      <Footer />
     </div>
   );
 };

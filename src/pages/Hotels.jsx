@@ -2,15 +2,13 @@
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { Container, Row, Col, Card, Form, InputGroup, Button, Spinner, Badge } from 'react-bootstrap';
 import { hotelAPI } from '@/services/api';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import HotelCard from '@/components/HotelCard';
 import SearchForm from '@/components/SearchForm';
-import { Loader2, Hotel as HotelIcon, MapPin, Calendar, Users } from 'lucide-react';
 import { toast } from 'sonner';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
 
 const Hotels = () => {
   const location = useLocation();
@@ -102,90 +100,96 @@ const Hotels = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="d-flex flex-column min-vh-100">
       <Navbar />
       
-      <main className="flex-grow pt-16 md:pt-20">
+      <main className="flex-grow-1 pt-5 mt-5">
         {/* Hero Section */}
-        <section className="bg-hotel-50 py-12 md:py-16">
-          <div className="container mx-auto px-4">
-            <h1 className="text-3xl md:text-4xl font-bold mb-4 text-center">
+        <section className="bg-primary bg-opacity-10 py-5">
+          <Container>
+            <h1 className="h2 text-center mb-3">
               Find Your Perfect Stay
             </h1>
-            <p className="text-muted-foreground text-center mb-8 max-w-2xl mx-auto">
+            <p className="text-muted text-center mb-4 mx-auto" style={{ maxWidth: '700px' }}>
               Browse our curated selection of hotels, resorts, and vacation rentals to find the perfect accommodation for your next trip.
             </p>
             
             {/* Quick Search Bar */}
-            <form onSubmit={handleQuickSearch} className="relative max-w-xl mx-auto mb-8">
-              <div className="flex">
-                <div className="relative flex-grow">
-                  <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-                  <Input
-                    type="text"
-                    placeholder="Where are you going? (city, destination)"
-                    className="pl-10 pr-3 py-2 w-full rounded-l-md"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
-                </div>
-                <Button type="submit" className="bg-hotel-500 hover:bg-hotel-600 rounded-l-none">
+            <Form onSubmit={handleQuickSearch} className="mb-4 mx-auto" style={{ maxWidth: '600px' }}>
+              <InputGroup className="shadow-sm">
+                <InputGroup.Text>
+                  <i className="bi bi-geo-alt"></i>
+                </InputGroup.Text>
+                <Form.Control
+                  type="text"
+                  placeholder="Where are you going? (city, destination)"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+                <Button type="submit" variant="primary">
                   Search
                 </Button>
-              </div>
-            </form>
+              </InputGroup>
+            </Form>
             
             {/* Advanced Search Form */}
-            <div className="max-w-4xl mx-auto bg-white p-4 rounded-lg shadow-md">
-              <SearchForm 
-                initialValues={searchParams}
-                onSearch={handleSearch} 
-              />
+            <div className="mx-auto" style={{ maxWidth: '900px' }}>
+              <Card className="border-0 shadow-sm">
+                <Card.Body>
+                  <SearchForm 
+                    initialValues={searchParams}
+                    onSearch={handleSearch} 
+                  />
+                </Card.Body>
+              </Card>
             </div>
-          </div>
+          </Container>
         </section>
         
         {/* Hotels List */}
-        <section className="py-12 md:py-16">
-          <div className="container mx-auto px-4">
-            <h2 className="text-2xl md:text-3xl font-bold mb-8">
+        <section className="py-5">
+          <Container>
+            <h2 className="h3 mb-4">
               {searchParams.city 
                 ? `Hotels in ${searchParams.city}` 
                 : "Available Hotels"}
             </h2>
             
             {isLoading ? (
-              <div className="flex justify-center py-12">
-                <Loader2 className="h-8 w-8 animate-spin text-hotel-500" />
+              <div className="text-center py-5">
+                <Spinner animation="border" variant="primary" />
+                <p className="mt-3 text-muted">Loading hotels...</p>
               </div>
             ) : error ? (
-              <div className="text-center py-12">
-                <p className="text-red-500 mb-4">Unable to load hotels</p>
-                <p className="text-muted-foreground">
+              <div className="text-center py-5">
+                <h3 className="text-danger mb-3">Unable to load hotels</h3>
+                <p className="text-muted">
                   There was an error fetching the hotels. Please try again later.
                 </p>
               </div>
             ) : filteredHotels.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <Row className="g-4">
                 {filteredHotels.map((hotel) => (
-                  <div 
-                    key={hotel._id} 
-                    onClick={() => handleHotelClick(hotel._id)}
-                    className="cursor-pointer"
-                  >
-                    <HotelCard hotel={hotel} />
-                  </div>
+                  <Col key={hotel._id} md={6} lg={4}>
+                    <div 
+                      onClick={() => handleHotelClick(hotel._id)}
+                      className="cursor-pointer h-100"
+                      style={{ cursor: 'pointer' }}
+                    >
+                      <HotelCard hotel={hotel} />
+                    </div>
+                  </Col>
                 ))}
-              </div>
+              </Row>
             ) : (
-              <div className="text-center py-12">
-                <HotelIcon className="h-16 w-16 mx-auto text-gray-300 mb-4" />
-                <p className="text-xl font-medium mb-2">No hotels found</p>
-                <p className="text-muted-foreground mb-6">
+              <div className="text-center py-5">
+                <i className="bi bi-building fs-1 text-muted mb-3"></i>
+                <h3 className="h4 mb-2">No hotels found</h3>
+                <p className="text-muted mb-4">
                   Try adjusting your search criteria or check back later.
                 </p>
                 <Button 
-                  className="bg-hotel-500 hover:bg-hotel-600" 
+                  variant="primary" 
                   onClick={() => {
                     setSearchParams({
                       city: '',
@@ -203,7 +207,7 @@ const Hotels = () => {
                 </Button>
               </div>
             )}
-          </div>
+          </Container>
         </section>
       </main>
       

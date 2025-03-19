@@ -1,10 +1,7 @@
 
 import { useState } from 'react';
 import { format } from 'date-fns';
-import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogTitle, DialogHeader } from '@/components/ui/dialog';
-import { Separator } from '@/components/ui/separator';
-import { FileText, Printer, Download } from 'lucide-react';
+import { Modal, Button, Row, Col, Card } from 'react-bootstrap';
 
 const BookingReceipt = ({ booking, hotel, room, user, open, onClose }) => {
   const [isPrinting, setIsPrinting] = useState(false);
@@ -48,204 +45,142 @@ const BookingReceipt = ({ booking, hotel, room, user, open, onClose }) => {
   };
   
   const isInDialog = open !== undefined && onClose !== undefined;
-  
-  if (isInDialog) {
-    return (
-      <Dialog open={open} onOpenChange={onClose}>
-        <DialogContent className="sm:max-w-[600px]">
-          <DialogHeader>
-            <DialogTitle className="flex items-center">
-              <FileText className="h-5 w-5 mr-2" />
-              Booking Receipt
-            </DialogTitle>
-          </DialogHeader>
-          
-          <div className="p-4 space-y-6 print:p-0" id="receipt-content">
-            <div className="flex justify-between items-start">
-              <div>
-                <h2 className="text-2xl font-bold">Booking Receipt</h2>
-                <p className="text-muted-foreground">
-                  {format(new Date(), 'MMM dd, yyyy')}
-                </p>
-              </div>
-              <div className="text-right">
-                <p className="font-semibold">Booking ID:</p>
-                <p className="font-mono">{booking._id}</p>
-              </div>
-            </div>
-            
-            <Separator />
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <h3 className="font-semibold mb-2">Hotel Information</h3>
-                <p className="font-medium">{hotel.name}</p>
-                <p>{hotel.address}</p>
-                <p>{hotel.city}</p>
-              </div>
-              
-              <div>
-                <h3 className="font-semibold mb-2">Guest Information</h3>
-                <p>Booking made by: {user ? user.username : booking.userId}</p>
-              </div>
-            </div>
-            
-            <div>
-              <h3 className="font-semibold mb-2">Booking Details</h3>
-              <div className="rounded-md border p-4 space-y-2">
-                <div className="flex justify-between">
-                  <span>Room Type:</span>
-                  <span className="font-medium">{room?.title || 'Standard Room'}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Room Number:</span>
-                  <span>{booking.roomNumber}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Check-in:</span>
-                  <span>{format(new Date(booking.dateStart), 'MMM dd, yyyy')}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Check-out:</span>
-                  <span>{format(new Date(booking.dateEnd), 'MMM dd, yyyy')}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Status:</span>
-                  <span className={`font-medium ${
-                    booking.status === 'confirmed' ? 'text-green-600' : 
-                    booking.status === 'cancelled' ? 'text-red-600' :
-                    'text-blue-600'
-                  }`}>
-                    {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
-                  </span>
-                </div>
-              </div>
-            </div>
-            
-            <div>
-              <h3 className="font-semibold mb-2">Payment Summary</h3>
-              <div className="rounded-md border p-4">
-                <div className="flex justify-between font-medium text-lg mb-2">
-                  <span>Total Amount Paid:</span>
-                  <span>${booking.totalPrice}</span>
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Payment was successful. This serves as your official receipt.
-                </p>
-              </div>
-            </div>
-            
-            <div className="text-xs text-muted-foreground print:mt-8">
-              <p>Thank you for choosing StayHaven for your accommodation needs.</p>
-            </div>
-          </div>
-          
-          <div className="flex justify-end space-x-2 print:hidden">
-            <Button variant="outline" size="sm" onClick={handleDownload}>
-              <Download className="h-4 w-4 mr-2" />
-              Download
-            </Button>
-            <Button variant="default" size="sm" onClick={handlePrint}>
-              <Printer className="h-4 w-4 mr-2" />
-              Print
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-    );
-  }
-  
-  return (
-    <div className="p-4 space-y-6 border rounded-lg">
-      <div className="flex justify-between items-start">
+  const receiptContent = (
+    <div className="p-4 space-y-4 print-container">
+      <div className="d-flex justify-content-between align-items-start mb-4">
         <div>
-          <h2 className="text-2xl font-bold">Booking Receipt</h2>
-          <p className="text-muted-foreground">
+          <h2 className="h3 mb-1">Booking Receipt</h2>
+          <p className="text-muted">
             {format(new Date(), 'MMM dd, yyyy')}
           </p>
         </div>
-        <div className="text-right">
-          <p className="font-semibold">Booking ID:</p>
-          <p className="font-mono">{booking._id}</p>
+        <div className="text-end">
+          <p className="fw-bold mb-1">Booking ID:</p>
+          <p className="font-monospace">{booking._id}</p>
         </div>
       </div>
       
-      <Separator />
+      <hr />
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div>
-          <h3 className="font-semibold mb-2">Hotel Information</h3>
-          <p className="font-medium">{hotel.name}</p>
-          <p>{hotel.address}</p>
+      <Row className="mb-4">
+        <Col md={6} className="mb-3 mb-md-0">
+          <h5 className="mb-3">Hotel Information</h5>
+          <p className="fw-medium mb-1">{hotel.name}</p>
+          <p className="mb-1">{hotel.address}</p>
           <p>{hotel.city}</p>
-        </div>
+        </Col>
         
-        <div>
-          <h3 className="font-semibold mb-2">Guest Information</h3>
+        <Col md={6}>
+          <h5 className="mb-3">Guest Information</h5>
           <p>Booking made by: {user ? user.username : booking.userId}</p>
-        </div>
+        </Col>
+      </Row>
+      
+      <div className="mb-4">
+        <h5 className="mb-3">Booking Details</h5>
+        <Card className="border">
+          <Card.Body>
+            <Row className="mb-2">
+              <Col xs={6}>Room Type:</Col>
+              <Col xs={6} className="text-end fw-medium">{room?.title || 'Standard Room'}</Col>
+            </Row>
+            <Row className="mb-2">
+              <Col xs={6}>Room Number:</Col>
+              <Col xs={6} className="text-end">{booking.roomNumber}</Col>
+            </Row>
+            <Row className="mb-2">
+              <Col xs={6}>Check-in:</Col>
+              <Col xs={6} className="text-end">{format(new Date(booking.dateStart), 'MMM dd, yyyy')}</Col>
+            </Row>
+            <Row className="mb-2">
+              <Col xs={6}>Check-out:</Col>
+              <Col xs={6} className="text-end">{format(new Date(booking.dateEnd), 'MMM dd, yyyy')}</Col>
+            </Row>
+            <Row>
+              <Col xs={6}>Status:</Col>
+              <Col xs={6} className="text-end">
+                <span className={`fw-medium ${
+                  booking.status === 'confirmed' ? 'text-success' : 
+                  booking.status === 'cancelled' ? 'text-danger' :
+                  'text-primary'
+                }`}>
+                  {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
+                </span>
+              </Col>
+            </Row>
+          </Card.Body>
+        </Card>
       </div>
       
-      <div>
-        <h3 className="font-semibold mb-2">Booking Details</h3>
-        <div className="rounded-md border p-4 space-y-2">
-          <div className="flex justify-between">
-            <span>Room Type:</span>
-            <span className="font-medium">{room?.title || 'Standard Room'}</span>
-          </div>
-          <div className="flex justify-between">
-            <span>Room Number:</span>
-            <span>{booking.roomNumber}</span>
-          </div>
-          <div className="flex justify-between">
-            <span>Check-in:</span>
-            <span>{format(new Date(booking.dateStart), 'MMM dd, yyyy')}</span>
-          </div>
-          <div className="flex justify-between">
-            <span>Check-out:</span>
-            <span>{format(new Date(booking.dateEnd), 'MMM dd, yyyy')}</span>
-          </div>
-          <div className="flex justify-between">
-            <span>Status:</span>
-            <span className={`font-medium ${
-              booking.status === 'confirmed' ? 'text-green-600' : 
-              booking.status === 'cancelled' ? 'text-red-600' :
-              'text-blue-600'
-            }`}>
-              {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
-            </span>
-          </div>
-        </div>
+      <div className="mb-4">
+        <h5 className="mb-3">Payment Summary</h5>
+        <Card className="border">
+          <Card.Body>
+            <Row className="align-items-center">
+              <Col xs={6}>
+                <p className="fs-5 fw-medium mb-0">Total Amount Paid:</p>
+              </Col>
+              <Col xs={6} className="text-end">
+                <p className="fs-5 fw-bold mb-0">${booking.totalPrice}</p>
+              </Col>
+            </Row>
+            <p className="text-muted small mt-2 mb-0">
+              Payment was successful. This serves as your official receipt.
+            </p>
+          </Card.Body>
+        </Card>
       </div>
       
-      <div>
-        <h3 className="font-semibold mb-2">Payment Summary</h3>
-        <div className="rounded-md border p-4">
-          <div className="flex justify-between font-medium text-lg mb-2">
-            <span>Total Amount Paid:</span>
-            <span>${booking.totalPrice}</span>
-          </div>
-          <p className="text-xs text-muted-foreground">
-            Payment was successful. This serves as your official receipt.
-          </p>
-        </div>
-      </div>
-      
-      <div className="text-xs text-muted-foreground print:mt-8">
+      <div className="text-muted small mt-4 print-only">
         <p>Thank you for choosing StayHaven for your accommodation needs.</p>
       </div>
-      
-      <div className="flex justify-end space-x-2 print:hidden">
-        <Button variant="outline" size="sm" onClick={handleDownload}>
-          <Download className="h-4 w-4 mr-2" />
-          Download
-        </Button>
-        <Button variant="default" size="sm" onClick={handlePrint}>
-          <Printer className="h-4 w-4 mr-2" />
-          Print
-        </Button>
-      </div>
     </div>
+  );
+  
+  if (isInDialog) {
+    return (
+      <Modal size="lg" show={open} onHide={onClose} centered>
+        <Modal.Header closeButton>
+          <Modal.Title className="d-flex align-items-center">
+            <i className="bi bi-file-text me-2"></i>
+            Booking Receipt
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {receiptContent}
+        </Modal.Body>
+        <Modal.Footer className="no-print">
+          <Button variant="outline-secondary" onClick={handleDownload}>
+            <i className="bi bi-download me-2"></i>
+            Download
+          </Button>
+          <Button variant="primary" onClick={handlePrint}>
+            <i className="bi bi-printer me-2"></i>
+            Print
+          </Button>
+        </Modal.Footer>
+      </Modal>
+    );
+  }
+  
+  // Standalone version
+  return (
+    <Card className="border-0 shadow-sm">
+      <Card.Body>
+        {receiptContent}
+        
+        <div className="d-flex justify-content-end mt-4 no-print">
+          <Button variant="outline-secondary" className="me-2" onClick={handleDownload}>
+            <i className="bi bi-download me-2"></i>
+            Download
+          </Button>
+          <Button variant="primary" onClick={handlePrint}>
+            <i className="bi bi-printer me-2"></i>
+            Print
+          </Button>
+        </div>
+      </Card.Body>
+    </Card>
   );
 };
 

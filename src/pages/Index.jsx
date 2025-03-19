@@ -1,160 +1,185 @@
 
 import React from 'react';
+import { Container, Row, Col, Button, Card } from 'react-bootstrap';
+import { Link } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import { Button } from '@/components/ui/button';
-import { Link } from 'react-router-dom';
+import SearchForm from '@/components/SearchForm';
 
 const Index = () => {
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="d-flex flex-column min-vh-100">
       <Navbar />
       
       {/* Hero Section */}
-      <div className="bg-gradient-to-r from-hotel-50 to-blue-50 pt-20">
-        <div className="container-custom py-16 md:py-24 flex flex-col md:flex-row items-center">
-          <div className="md:w-1/2 mb-8 md:mb-0 md:pr-8">
-            <h1 className="text-4xl md:text-5xl font-bold mb-4 leading-tight">
-              Find Your Perfect Stay with StayHaven
-            </h1>
-            <p className="text-lg text-muted-foreground mb-6">
-              Discover amazing hotels, resorts, and vacation rentals from around the world. Book with confidence and enjoy your stay.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-3">
-              <Link to="/hotels">
-                <Button size="lg" className="bg-hotel-500 hover:bg-hotel-600 w-full sm:w-auto">
-                  Browse Hotels
-                </Button>
-              </Link>
-              <Link to="/about">
-                <Button size="lg" variant="outline" className="w-full sm:w-auto">
-                  Learn More
-                </Button>
-              </Link>
-            </div>
-          </div>
-          <div className="md:w-1/2">
-            <img 
-              src="https://images.unsplash.com/photo-1566073771259-6a8506099945" 
-              alt="Luxury Hotel" 
-              className="rounded-lg shadow-lg w-full"
-            />
-          </div>
-        </div>
+      <div className="bg-primary bg-opacity-10 pt-5 mt-5">
+        <Container className="py-5">
+          <Row className="align-items-center">
+            <Col md={6} className="mb-4 mb-md-0">
+              <h1 className="display-4 fw-bold mb-3">
+                Find Your Perfect Stay with StayHaven
+              </h1>
+              <p className="lead text-muted mb-4">
+                Discover amazing hotels, resorts, and vacation rentals from around the world. 
+                Book with confidence and enjoy your stay.
+              </p>
+              <div className="d-flex flex-column flex-sm-row gap-2">
+                <Link to="/hotels">
+                  <Button variant="primary" size="lg">
+                    Browse Hotels
+                  </Button>
+                </Link>
+                <Link to="/about">
+                  <Button variant="outline-primary" size="lg">
+                    Learn More
+                  </Button>
+                </Link>
+              </div>
+            </Col>
+            <Col md={6}>
+              <img 
+                src="https://images.unsplash.com/photo-1566073771259-6a8506099945" 
+                alt="Luxury Hotel" 
+                className="img-fluid rounded shadow"
+              />
+            </Col>
+          </Row>
+        </Container>
       </div>
+      
+      {/* Search Section */}
+      <Container className="my-n5 position-relative z-index-1">
+        <div className="p-4 bg-white rounded-3 shadow">
+          <h3 className="h4 mb-4 text-center">Search Your Perfect Hotel</h3>
+          <SearchForm />
+        </div>
+      </Container>
       
       {/* Featured Section */}
-      <div className="py-16 bg-white">
-        <div className="container-custom">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">Featured Destinations</h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto">
-              Explore our handpicked selection of stunning hotels and resorts in the most desirable locations around the world.
-            </p>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="rounded-lg overflow-hidden shadow-md group">
-              <div className="relative overflow-hidden aspect-[4/3]">
-                <img 
+      <Container className="py-5 mt-5">
+        <div className="text-center mb-5">
+          <h2 className="h2 mb-3">Featured Destinations</h2>
+          <p className="text-muted mx-auto" style={{ maxWidth: '700px' }}>
+            Explore our handpicked selection of stunning hotels and resorts in the most desirable locations around the world.
+          </p>
+        </div>
+        
+        <Row>
+          <Col md={4} className="mb-4">
+            <Card className="h-100 border-0 shadow-sm hotel-card">
+              <div className="position-relative">
+                <Card.Img 
+                  variant="top" 
                   src="https://images.unsplash.com/photo-1542314831-068cd1dbfeeb" 
                   alt="New York"
-                  className="w-full h-full object-cover transition duration-500 group-hover:scale-105"
+                  className="card-img-top"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end">
-                  <div className="p-4 text-white">
-                    <h3 className="text-xl font-semibold">New York</h3>
-                    <p className="text-sm opacity-90">125 Properties</p>
-                  </div>
+                <div className="position-absolute bottom-0 start-0 end-0 p-3 text-white bg-dark bg-opacity-50">
+                  <h3 className="h5 mb-1">New York</h3>
+                  <p className="mb-0 small">125 Properties</p>
                 </div>
               </div>
-            </div>
-            
-            <div className="rounded-lg overflow-hidden shadow-md group">
-              <div className="relative overflow-hidden aspect-[4/3]">
-                <img 
+            </Card>
+          </Col>
+          
+          <Col md={4} className="mb-4">
+            <Card className="h-100 border-0 shadow-sm hotel-card">
+              <div className="position-relative">
+                <Card.Img 
+                  variant="top" 
                   src="https://images.unsplash.com/photo-1551882547-ff40c63fe5fa" 
                   alt="Miami"
-                  className="w-full h-full object-cover transition duration-500 group-hover:scale-105"
+                  className="card-img-top"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end">
-                  <div className="p-4 text-white">
-                    <h3 className="text-xl font-semibold">Miami</h3>
-                    <p className="text-sm opacity-90">98 Properties</p>
-                  </div>
+                <div className="position-absolute bottom-0 start-0 end-0 p-3 text-white bg-dark bg-opacity-50">
+                  <h3 className="h5 mb-1">Miami</h3>
+                  <p className="mb-0 small">98 Properties</p>
                 </div>
               </div>
-            </div>
-            
-            <div className="rounded-lg overflow-hidden shadow-md group">
-              <div className="relative overflow-hidden aspect-[4/3]">
-                <img 
+            </Card>
+          </Col>
+          
+          <Col md={4} className="mb-4">
+            <Card className="h-100 border-0 shadow-sm hotel-card">
+              <div className="position-relative">
+                <Card.Img 
+                  variant="top" 
                   src="https://images.unsplash.com/photo-1566073771259-6a8506099945" 
                   alt="San Francisco"
-                  className="w-full h-full object-cover transition duration-500 group-hover:scale-105"
+                  className="card-img-top"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end">
-                  <div className="p-4 text-white">
-                    <h3 className="text-xl font-semibold">San Francisco</h3>
-                    <p className="text-sm opacity-90">72 Properties</p>
-                  </div>
+                <div className="position-absolute bottom-0 start-0 end-0 p-3 text-white bg-dark bg-opacity-50">
+                  <h3 className="h5 mb-1">San Francisco</h3>
+                  <p className="mb-0 small">72 Properties</p>
                 </div>
               </div>
-            </div>
-          </div>
-          
-          <div className="mt-10 text-center">
-            <Link to="/hotels">
-              <Button variant="outline" size="lg">
-                View All Destinations
-              </Button>
-            </Link>
-          </div>
+            </Card>
+          </Col>
+        </Row>
+        
+        <div className="text-center mt-4">
+          <Link to="/hotels">
+            <Button variant="outline-primary">
+              View All Destinations
+            </Button>
+          </Link>
         </div>
-      </div>
+      </Container>
       
       {/* Benefits Section */}
-      <div className="py-16 bg-gray-50">
-        <div className="container-custom">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">Why Choose StayHaven</h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto">
+      <div className="py-5 bg-light">
+        <Container>
+          <div className="text-center mb-5">
+            <h2 className="h2 mb-3">Why Choose StayHaven</h2>
+            <p className="text-muted mx-auto" style={{ maxWidth: '700px' }}>
               We're committed to making your travel experience as seamless and enjoyable as possible.
             </p>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="bg-white p-6 rounded-lg shadow-sm">
-              <div className="h-12 w-12 flex items-center justify-center rounded-full bg-hotel-100 text-hotel-600 mb-4">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                </svg>
-              </div>
-              <h3 className="text-xl font-semibold mb-2">Secure Booking</h3>
-              <p className="text-muted-foreground">Your privacy and security are our top priorities. All bookings are encrypted and secure.</p>
-            </div>
+          <Row className="g-4">
+            <Col md={4}>
+              <Card className="h-100 border-0 shadow-sm p-4">
+                <div className="text-primary mb-3">
+                  <i className="bi bi-shield-lock fs-1"></i>
+                </div>
+                <Card.Body className="p-0">
+                  <Card.Title>Secure Booking</Card.Title>
+                  <Card.Text className="text-muted">
+                    Your privacy and security are our top priorities. All bookings are encrypted and secure.
+                  </Card.Text>
+                </Card.Body>
+              </Card>
+            </Col>
             
-            <div className="bg-white p-6 rounded-lg shadow-sm">
-              <div className="h-12 w-12 flex items-center justify-center rounded-full bg-hotel-100 text-hotel-600 mb-4">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                </svg>
-              </div>
-              <h3 className="text-xl font-semibold mb-2">Best Price Guarantee</h3>
-              <p className="text-muted-foreground">Find a lower price elsewhere? We'll match it and give you an additional 10% off.</p>
-            </div>
+            <Col md={4}>
+              <Card className="h-100 border-0 shadow-sm p-4">
+                <div className="text-primary mb-3">
+                  <i className="bi bi-tag fs-1"></i>
+                </div>
+                <Card.Body className="p-0">
+                  <Card.Title>Best Price Guarantee</Card.Title>
+                  <Card.Text className="text-muted">
+                    Find a lower price elsewhere? We'll match it and give you an additional 10% off.
+                  </Card.Text>
+                </Card.Body>
+              </Card>
+            </Col>
             
-            <div className="bg-white p-6 rounded-lg shadow-sm">
-              <div className="h-12 w-12 flex items-center justify-center rounded-full bg-hotel-100 text-hotel-600 mb-4">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />
-                </svg>
-              </div>
-              <h3 className="text-xl font-semibold mb-2">24/7 Support</h3>
-              <p className="text-muted-foreground">Our customer support team is available around the clock to assist with any questions or issues.</p>
-            </div>
-          </div>
-        </div>
+            <Col md={4}>
+              <Card className="h-100 border-0 shadow-sm p-4">
+                <div className="text-primary mb-3">
+                  <i className="bi bi-headset fs-1"></i>
+                </div>
+                <Card.Body className="p-0">
+                  <Card.Title>24/7 Support</Card.Title>
+                  <Card.Text className="text-muted">
+                    Our customer support team is available around the clock to assist with any questions or issues.
+                  </Card.Text>
+                </Card.Body>
+              </Card>
+            </Col>
+          </Row>
+        </Container>
       </div>
       
       <Footer />

@@ -1,11 +1,9 @@
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
-import { MapPin, FileText } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Card, Row, Col, Button, Badge } from 'react-bootstrap';
 import BookingReceipt from './BookingReceipt';
-import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 
 // Helper function to format dates
 const formatDate = (dateString) => {
@@ -47,119 +45,121 @@ const BookingItem = ({ booking, onCancel, isDateInFuture }) => {
   const room = booking.room || defaultRoom;
   
   return (
-    <div className="border rounded-lg overflow-hidden hover:shadow-md transition-shadow animate-fade-in-up">
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
-        {/* Image */}
-        <div className="md:col-span-3 aspect-[4/3] overflow-hidden bg-gray-100 flex items-center justify-center">
-          {hotel.photos && hotel.photos[0] ? (
-            <img 
-              src={hotel.photos[0]} 
-              alt={hotel.name}
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <div className="text-gray-400 text-center p-4">
-              <div className="w-12 h-12 mx-auto mb-2 border-2 border-gray-300 rounded-full flex items-center justify-center">
-                <MapPin className="h-6 w-6" />
+    <Card className="mb-3 border-0 shadow-sm hover-shadow animate-fade-in-up">
+      <Card.Body className="p-0">
+        <Row className="g-0">
+          {/* Image */}
+          <Col md={3} className="position-relative">
+            {hotel.photos && hotel.photos[0] ? (
+              <div className="h-100" style={{ minHeight: '180px' }}>
+                <img 
+                  src={hotel.photos[0]} 
+                  alt={hotel.name}
+                  className="w-100 h-100 object-fit-cover"
+                  style={{ objectFit: 'cover' }}
+                />
               </div>
-              <p>No image</p>
-            </div>
-          )}
-        </div>
-        
-        {/* Details */}
-        <div className="p-4 md:col-span-6 flex flex-col">
-          <div>
-            <h3 className="font-medium text-lg">{hotel.name}</h3>
-            <p className="text-sm text-muted-foreground flex items-center">
-              <MapPin className="h-3 w-3 mr-1" />
-              {hotel.city}
-            </p>
-          </div>
-          
-          <div className="mt-2 space-y-1">
-            <p className="text-sm">
-              <span className="font-medium">Room:</span> {room.title} (Room {booking.roomNumber})
-            </p>
-            <p className="text-sm">
-              <span className="font-medium">Dates:</span> {formatDate(booking.dateStart)} - {formatDate(booking.dateEnd)}
-            </p>
-            <p className="text-sm">
-              <span className="font-medium">Guests:</span> {room.maxPeople} max
-            </p>
-          </div>
-          
-          <div className="mt-auto pt-2 flex space-x-4">
-            <Link 
-              to={`/hotels/${booking.hotelId}`}
-              className="text-hotel-500 hover:text-hotel-600 text-sm font-medium"
-            >
-              View Hotel
-            </Link>
-            <button 
-              onClick={() => setShowReceipt(true)}
-              className="text-gray-500 hover:text-gray-800 text-sm font-medium flex items-center"
-            >
-              <FileText className="h-3 w-3 mr-1" />
-              View Receipt
-            </button>
-          </div>
-        </div>
-        
-        {/* Price and Status */}
-        <div className="p-4 bg-gray-50 md:col-span-3">
-          <div className="space-y-4">
-            <div>
-              <p className="text-sm text-muted-foreground">Total Price</p>
-              <p className="text-lg font-semibold">${booking.totalPrice}</p>
-            </div>
-            
-            <div>
-              <p className="text-sm text-muted-foreground">Status</p>
-              <div className="flex items-center mt-1">
-                {booking.status === 'confirmed' ? (
-                  <>
-                    <span className="h-2 w-2 bg-green-500 rounded-full mr-2"></span>
-                    <span className="text-green-600 font-medium">Confirmed</span>
-                  </>
-                ) : booking.status === 'cancelled' ? (
-                  <>
-                    <span className="h-2 w-2 bg-red-500 rounded-full mr-2"></span>
-                    <span className="text-red-600 font-medium">Cancelled</span>
-                  </>
-                ) : (
-                  <>
-                    <span className="h-2 w-2 bg-gray-500 rounded-full mr-2"></span>
-                    <span className="text-gray-600 font-medium">Completed</span>
-                  </>
-                )}
+            ) : (
+              <div className="h-100 d-flex flex-column justify-content-center align-items-center bg-light text-muted" style={{ minHeight: '180px' }}>
+                <i className="bi bi-geo-alt fs-1 mb-2"></i>
+                <p>No image</p>
               </div>
-            </div>
-            
-            {booking.status === 'confirmed' && isDateInFuture(booking.dateStart) && (
-              <Button 
-                variant="outline" 
-                className="w-full text-red-500 border-red-200 hover:bg-red-50 hover:text-red-600"
-                onClick={() => onCancel(booking._id || '')}
-              >
-                Cancel Booking
-              </Button>
             )}
-          </div>
-        </div>
-      </div>
+          </Col>
+          
+          {/* Details */}
+          <Col md={6}>
+            <div className="p-3">
+              <h5 className="mb-1">{hotel.name}</h5>
+              <p className="text-muted small mb-2">
+                <i className="bi bi-geo-alt me-1"></i>
+                {hotel.city}
+              </p>
+              
+              <div className="mt-3 mb-1">
+                <p className="mb-1 small">
+                  <span className="fw-bold">Room:</span> {room.title} (Room {booking.roomNumber})
+                </p>
+                <p className="mb-1 small">
+                  <span className="fw-bold">Dates:</span> {formatDate(booking.dateStart)} - {formatDate(booking.dateEnd)}
+                </p>
+                <p className="mb-1 small">
+                  <span className="fw-bold">Guests:</span> {room.maxPeople} max
+                </p>
+              </div>
+              
+              <div className="mt-3">
+                <Link 
+                  to={`/hotels/${booking.hotelId}`}
+                  className="btn btn-sm btn-link text-decoration-none p-0 me-3"
+                >
+                  View Hotel
+                </Link>
+                <Button 
+                  variant="link"
+                  size="sm"
+                  className="text-decoration-none p-0"
+                  onClick={() => setShowReceipt(true)}
+                >
+                  <i className="bi bi-file-text me-1"></i>
+                  View Receipt
+                </Button>
+              </div>
+            </div>
+          </Col>
+          
+          {/* Price and Status */}
+          <Col md={3} className="bg-light">
+            <div className="p-3 h-100 d-flex flex-column justify-content-between">
+              <div>
+                <p className="text-muted small mb-1">Total Price</p>
+                <p className="h5 fw-bold mb-3">${booking.totalPrice}</p>
+                
+                <p className="text-muted small mb-1">Status</p>
+                <div>
+                  {booking.status === 'confirmed' ? (
+                    <Badge bg="success" className="p-2">
+                      <i className="bi bi-check-circle me-1"></i>
+                      Confirmed
+                    </Badge>
+                  ) : booking.status === 'cancelled' ? (
+                    <Badge bg="danger" className="p-2">
+                      <i className="bi bi-x-circle me-1"></i>
+                      Cancelled
+                    </Badge>
+                  ) : (
+                    <Badge bg="secondary" className="p-2">
+                      <i className="bi bi-clock-history me-1"></i>
+                      Completed
+                    </Badge>
+                  )}
+                </div>
+              </div>
+              
+              {booking.status === 'confirmed' && isDateInFuture(booking.dateStart) && (
+                <Button 
+                  variant="outline-danger" 
+                  size="sm"
+                  className="mt-3"
+                  onClick={() => onCancel(booking._id || '')}
+                >
+                  Cancel Booking
+                </Button>
+              )}
+            </div>
+          </Col>
+        </Row>
+      </Card.Body>
       
-      {/* Receipt Dialog */}
-      {showReceipt && (
-        <BookingReceipt 
-          booking={booking}
-          hotel={hotel}
-          room={room}
-          open={showReceipt}
-          onClose={() => setShowReceipt(false)}
-        />
-      )}
-    </div>
+      {/* Receipt Modal */}
+      <BookingReceipt 
+        booking={booking}
+        hotel={hotel}
+        room={room}
+        open={showReceipt}
+        onClose={() => setShowReceipt(false)}
+      />
+    </Card>
   );
 };
 

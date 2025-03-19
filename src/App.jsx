@@ -1,28 +1,36 @@
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
+import React, { useEffect } from 'react';
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/context/AuthContext";
+import { Toaster } from 'sonner';
+
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import UserDashboard from "./pages/UserDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import ModeratorDashboard from "./pages/ModeratorDashboard";
+import WorkerDashboard from "./pages/WorkerDashboard";
+import AdminLogin from "./pages/AdminLogin";
+import AdminRegister from "./pages/AdminRegister";
+import ModeratorLogin from "./pages/ModeratorLogin";
+import ModeratorRegister from "./pages/ModeratorRegister";
+import WorkerLogin from "./pages/WorkerLogin";
+import WorkerRegister from "./pages/WorkerRegister";
 import NotFound from "./pages/NotFound";
 import Hotels from "./pages/Hotels";
 import HotelDetail from "./pages/HotelDetail";
+import RoomDetails from "./pages/RoomDetails";
 import Pricing from "./pages/Pricing";
 import About from "./pages/About";
 
-// Import missing but needed modules
-import axios from "axios";
-import React from 'react';
+import 'bootstrap/dist/css/bootstrap.min.css';
+import 'bootstrap/dist/js/bootstrap.bundle.min.js';
+import './index.css';
 
-// Create a query client - move inside the component to fix hooks error
+import axios from "axios";
+
 const App = () => {
-  // Create a query client inside the component
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: {
@@ -32,14 +40,10 @@ const App = () => {
     },
   });
 
-  // Mock API for development
   const setupMockAPI = () => {
     axios.interceptors.request.use(
       async (config) => {
-        // Simulate network delay
         await new Promise(resolve => setTimeout(resolve, 800));
-        
-        // Mock successful response based on endpoint
         console.log("API Request:", config.url);
         return config;
       },
@@ -49,39 +53,41 @@ const App = () => {
     );
   };
 
-  // Initialize mock API in development environment
-  React.useEffect(() => {
+  useEffect(() => {
     setupMockAPI();
   }, []);
 
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner position="top-right" />
-          <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-              <Route path="/dashboard" element={<UserDashboard />} />
-              <Route path="/admin" element={<AdminDashboard />} />
-              <Route path="/moderator" element={<ModeratorDashboard />} />
-              
-              {/* Hotel routes */}
-              <Route path="/hotels" element={<Hotels />} />
-              <Route path="/hotels/:id" element={<HotelDetail />} />
-              
-              {/* Other routes */}
-              <Route path="/pricing" element={<Pricing />} />
-              <Route path="/about" element={<About />} />
-              
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
-        </TooltipProvider>
+        <Toaster position="top-right" />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/dashboard" element={<UserDashboard />} />
+            <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/moderator" element={<ModeratorDashboard />} />
+            <Route path="/worker" element={<WorkerDashboard />} />
+            
+            <Route path="/admin-login" element={<AdminLogin />} />
+            <Route path="/admin-register" element={<AdminRegister />} />
+            <Route path="/moderator-login" element={<ModeratorLogin />} />
+            <Route path="/moderator-register" element={<ModeratorRegister />} />
+            <Route path="/worker-login" element={<WorkerLogin />} />
+            <Route path="/worker-register" element={<WorkerRegister />} />
+            
+            <Route path="/hotels" element={<Hotels />} />
+            <Route path="/hotels/:id" element={<HotelDetail />} />
+            <Route path="/rooms/:id" element={<RoomDetails />} />
+            
+            <Route path="/pricing" element={<Pricing />} />
+            <Route path="/about" element={<About />} />
+            
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
       </AuthProvider>
     </QueryClientProvider>
   );

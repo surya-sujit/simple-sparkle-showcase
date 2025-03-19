@@ -1,90 +1,96 @@
 
-import { useState } from 'react';
+import React from 'react';
+import { Card, Badge } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
-import { MapPin, Star, ArrowRight } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
 
-const HotelCard = ({ hotel, className, featured = false }) => {
-  const [isLoading, setIsLoading] = useState(true);
-
-  // Function to handle image loading
-  const handleImageLoad = () => {
-    setIsLoading(false);
+const HotelCard = ({ hotel }) => {
+  // Default values for hotel in case some properties are missing
+  const {
+    _id = '',
+    name = 'Hotel Name',
+    city = 'Unknown Location',
+    address = '',
+    photos = [],
+    cheapestPrice = 0,
+    rating = 0,
+    featured = false,
+    type = 'hotel',
+    desc = ''
+  } = hotel || {};
+  
+  // Truncate description to 100 characters
+  const shortDesc = desc ? (desc.length > 100 ? `${desc.substring(0, 100)}...` : desc) : '';
+  
+  // Format currency
+  const formatPrice = (price) => {
+    return `$${price}`;
   };
-
+  
+  // Default image if no photos available
+  const defaultImage = "https://images.unsplash.com/photo-1566073771259-6a8506099945";
+  
   return (
-    <div 
-      className={cn(
-        "group rounded-lg overflow-hidden border border-border hover:shadow-md transition-all duration-300 bg-white hover:shadow-lg hover-lift",
-        className
-      )}
-    >
-      {/* Image Container */}
-      <div className="relative aspect-[16/9] overflow-hidden">
-        {isLoading && (
-          <div className="absolute inset-0 bg-muted animate-pulse"></div>
-        )}
-        
-        <img
-          src={hotel.photos[0] || '/placeholder.svg'}
-          alt={hotel.name}
-          className={cn(
-            "w-full h-full object-cover transition-transform duration-500 group-hover:scale-105",
-            isLoading ? "opacity-0" : "opacity-100"
-          )}
-          onLoad={handleImageLoad}
+    <Card className="h-100 shadow-sm hotel-card border-0">
+      <div className="position-relative">
+        <Card.Img 
+          variant="top" 
+          src={photos && photos.length > 0 ? photos[0] : defaultImage} 
+          alt={name}
+          className="card-img-top"
         />
-        
         {featured && (
-          <Badge className="absolute top-3 left-3 bg-hotel-500 hover:bg-hotel-600">
+          <Badge 
+            bg="warning" 
+            className="position-absolute top-0 end-0 mt-2 me-2"
+          >
             Featured
           </Badge>
         )}
-
-        {hotel.rating > 0 && (
-          <div className="absolute bottom-3 right-3 flex items-center bg-white/80 backdrop-blur-sm px-2 py-1 rounded-md text-xs font-medium">
-            <Star className="h-3 w-3 text-yellow-500 mr-1 fill-yellow-500" />
-            <span>{hotel.rating.toFixed(1)}</span>
-          </div>
-        )}
       </div>
       
-      {/* Content */}
-      <div className="p-4 space-y-2">
-        {/* Name */}
-        <h3 className="font-semibold text-lg text-foreground line-clamp-1">{hotel.name}</h3>
-        
-        {/* Location */}
-        <div className="flex items-center text-muted-foreground text-sm">
-          <MapPin className="h-4 w-4 mr-1" />
-          <span className="line-clamp-1">{hotel.city}</span>
-        </div>
-        
-        {/* Description - Optional */}
-        {!featured && (
-          <p className="text-muted-foreground text-sm line-clamp-2 mt-2">
-            {hotel.desc}
-          </p>
-        )}
-        
-        {/* Price and Button */}
-        <div className="pt-3 flex items-center justify-between">
+      <Card.Body className="d-flex flex-column">
+        <div className="d-flex justify-content-between align-items-start mb-2">
           <div>
-            <span className="font-medium text-lg">${hotel.cheapestPrice}</span>
-            <span className="text-muted-foreground text-sm"> / night</span>
+            <Card.Title className="h5 mb-1">{name}</Card.Title>
+            <Card.Subtitle className="mb-2 text-muted small">
+              <i className="bi bi-geo-alt-fill me-1"></i>{city}
+            </Card.Subtitle>
           </div>
           
-          <Link to={`/hotels/${hotel._id}`}>
-            <Button variant="ghost" size="sm" className="text-hotel-500 hover:text-hotel-600 hover:bg-hotel-50 p-0 h-auto">
-              View details
-              <ArrowRight className="h-4 w-4 ml-1" />
-            </Button>
+          <div className="d-flex align-items-center">
+            <Badge bg="success" className="d-flex align-items-center">
+              <i className="bi bi-star-fill me-1"></i>
+              {rating.toFixed(1)}
+            </Badge>
+          </div>
+        </div>
+        
+        <Card.Text className="text-muted small mb-3">
+          {shortDesc}
+        </Card.Text>
+        
+        <div className="mt-auto">
+          <div className="d-flex justify-content-between align-items-center">
+            <Badge bg="light" text="dark" className="text-capitalize">
+              {type}
+            </Badge>
+            <div className="text-end">
+              <div className="fw-bold text-primary mb-1">
+                {formatPrice(cheapestPrice)}
+              </div>
+              <span className="text-muted small">per night</span>
+            </div>
+          </div>
+          
+          <Link 
+            to={`/hotels/${_id}`} 
+            className="btn btn-primary btn-sm w-100 mt-3"
+          >
+            View Details
           </Link>
         </div>
-      </div>
-    </div>
+      </Card.Body>
+    </Card>
   );
 };
 

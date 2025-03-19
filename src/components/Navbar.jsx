@@ -1,72 +1,98 @@
 
-import { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
-import { Menu, X } from 'lucide-react';
-import Logo from './navbar/Logo';
-import DesktopNav from './navbar/DesktopNav';
-import AuthLinks from './navbar/AuthLinks';
-import MobileMenu from './navbar/MobileMenu';
+import { Navbar as BootstrapNavbar, Nav, Container, NavDropdown, Button } from 'react-bootstrap';
 
 const Navbar = () => {
   const { state, logout } = useAuth();
-  const { isAuthenticated } = state;
-  const [isScrolled, setIsScrolled] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const location = useLocation();
+  const { user, isAuthenticated } = state;
+  const navigate = useNavigate();
+  const [expanded, setExpanded] = useState(false);
 
-  // Change navbar style when scrolling
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 10);
-    };
+  const handleLogout = () => {
+    logout();
+    navigate('/');
+  };
 
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  // Close mobile menu when route changes
-  useEffect(() => {
-    setMobileMenuOpen(false);
-  }, [location]);
+  const closeNavbar = () => setExpanded(false);
 
   return (
-    <header
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        isScrolled || mobileMenuOpen
-          ? 'bg-white/80 backdrop-blur-md shadow-sm'
-          : 'bg-transparent'
-      }`}
+    <BootstrapNavbar 
+      expand="lg" 
+      className="navbar-hotel py-3 fixed-top"
+      expanded={expanded} 
+      onToggle={setExpanded}
     >
-      <div className="container-custom flex items-center justify-between h-16 md:h-20">
-        {/* Logo */}
-        <Logo />
-
-        {/* Desktop Navigation */}
-        <DesktopNav />
-
-        {/* Authentication Buttons */}
-        <div className="hidden md:flex items-center space-x-4">
-          <AuthLinks isAuthenticated={isAuthenticated} logout={logout} />
-        </div>
-
-        {/* Mobile Menu Button */}
-        <button
-          className="md:hidden flex items-center"
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
-        >
-          {mobileMenuOpen ? (
-            <X className="h-6 w-6 text-foreground" />
-          ) : (
-            <Menu className="h-6 w-6 text-foreground" />
-          )}
-        </button>
-      </div>
-
-      {/* Mobile Menu */}
-      {mobileMenuOpen && <MobileMenu isAuthenticated={isAuthenticated} logout={logout} />}
-    </header>
+      <Container>
+        <BootstrapNavbar.Brand as={Link} to="/" className="fs-4 fw-bold text-primary">
+          StayHaven
+        </BootstrapNavbar.Brand>
+        <BootstrapNavbar.Toggle aria-controls="basic-navbar-nav" />
+        <BootstrapNavbar.Collapse id="basic-navbar-nav">
+          <Nav className="me-auto">
+            <Nav.Link as={Link} to="/" onClick={closeNavbar}>Home</Nav.Link>
+            <Nav.Link as={Link} to="/hotels" onClick={closeNavbar}>Hotels</Nav.Link>
+            <Nav.Link as={Link} to="/about" onClick={closeNavbar}>About</Nav.Link>
+            <Nav.Link as={Link} to="/pricing" onClick={closeNavbar}>Pricing</Nav.Link>
+          </Nav>
+          
+          <Nav>
+            {isAuthenticated ? (
+              <>
+                <NavDropdown 
+                  title={
+                    <span className="d-inline-flex align-items-center">
+                      <span className="me-2">{user.username || 'User'}</span>
+                    </span>
+                  } 
+                  id="user-dropdown"
+                >
+                  <NavDropdown.Item as={Link} to="/dashboard" onClick={closeNavbar}>
+                    My Dashboard
+                  </NavDropdown.Item>
+                  
+                  {/* Admin option */}
+                  {user.isAdmin && (
+                    <NavDropdown.Item as={Link} to="/admin" onClick={closeNavbar}>
+                      Admin Panel
+                    </NavDropdown.Item>
+                  )}
+                  
+                  {/* Moderator option */}
+                  {user.isModerator && (
+                    <NavDropdown.Item as={Link} to="/moderator" onClick={closeNavbar}>
+                      Moderator Panel
+                    </NavDropdown.Item>
+                  )}
+                  
+                  {/* Worker option */}
+                  {user.isWorker && (
+                    <NavDropdown.Item as={Link} to="/worker" onClick={closeNavbar}>
+                      Worker Panel
+                    </NavDropdown.Item>
+                  )}
+                  
+                  <NavDropdown.Divider />
+                  <NavDropdown.Item onClick={() => { handleLogout(); closeNavbar(); }}>
+                    Logout
+                  </NavDropdown.Item>
+                </NavDropdown>
+              </>
+            ) : (
+              <>
+                <Nav.Link as={Link} to="/login" onClick={closeNavbar}>
+                  <Button variant="outline-primary" className="me-2">Login</Button>
+                </Nav.Link>
+                <Nav.Link as={Link} to="/register" onClick={closeNavbar}>
+                  <Button variant="primary">Register</Button>
+                </Nav.Link>
+              </>
+            )}
+          </Nav>
+        </BootstrapNavbar.Collapse>
+      </Container>
+    </BootstrapNavbar>
   );
 };
 

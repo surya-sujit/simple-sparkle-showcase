@@ -2,17 +2,9 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Hotel, Eye, EyeOff, Info } from 'lucide-react';
+import { Container, Row, Col, Card, Form, Button, Alert } from 'react-bootstrap';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import {
-  Alert,
-  AlertDescription,
-  AlertTitle,
-} from "@/components/ui/alert";
 
 const Login = () => {
   const { login, state } = useAuth();
@@ -49,125 +41,140 @@ const Login = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="d-flex flex-column min-vh-100">
       <Navbar />
       
-      <main className="flex-grow flex items-center justify-center py-16 px-4 bg-gray-50">
-        <div className="w-full max-w-md">
-          <div className="bg-white rounded-lg shadow-md overflow-hidden animate-fade-in-up">
-            {/* Header */}
-            <div className="p-6 bg-hotel-500 text-white text-center">
-              <Hotel className="h-8 w-8 mx-auto mb-2" />
-              <h1 className="text-2xl font-semibold">Welcome Back</h1>
-              <p className="text-white/80">Sign in to your StayHaven account</p>
-            </div>
-            
-            {/* Form */}
-            <form onSubmit={handleSubmit} className="p-6 space-y-4">
-              {error && (
-                <div className="p-3 rounded-md bg-red-50 text-red-500 text-sm">
-                  {error}
+      <main className="flex-grow-1 d-flex align-items-center py-5 bg-light">
+        <Container>
+          <Row className="justify-content-center">
+            <Col md={8} lg={6} xl={5}>
+              <Card className="border-0 shadow-sm overflow-hidden">
+                {/* Header */}
+                <div className="bg-primary text-white p-4 text-center">
+                  <i className="bi bi-building fs-1 mb-2"></i>
+                  <h1 className="h3 mb-1">Welcome Back</h1>
+                  <p className="mb-0 opacity-75">Sign in to your StayHaven account</p>
                 </div>
-              )}
+                
+                {/* Form */}
+                <Card.Body className="p-4">
+                  {error && (
+                    <Alert variant="danger">
+                      {error}
+                    </Alert>
+                  )}
+                  
+                  <Form onSubmit={handleSubmit} className="mt-2">
+                    <Form.Group className="mb-3">
+                      <Form.Label>Email</Form.Label>
+                      <Form.Control
+                        type="email"
+                        name="email"
+                        value={formData.email}
+                        onChange={handleChange}
+                        placeholder="Enter your email"
+                        required
+                      />
+                    </Form.Group>
+                    
+                    <Form.Group className="mb-3">
+                      <div className="d-flex justify-content-between align-items-center">
+                        <Form.Label>Password</Form.Label>
+                        <Link 
+                          to="/forgot-password" 
+                          className="small text-decoration-none"
+                        >
+                          Forgot password?
+                        </Link>
+                      </div>
+                      
+                      <div className="input-group">
+                        <Form.Control
+                          type={showPassword ? "text" : "password"}
+                          name="password"
+                          value={formData.password}
+                          onChange={handleChange}
+                          placeholder="Enter your password"
+                          required
+                        />
+                        <Button 
+                          variant="outline-secondary"
+                          onClick={toggleShowPassword}
+                        >
+                          <i className={`bi bi-eye${showPassword ? '-slash' : ''}`}></i>
+                        </Button>
+                      </div>
+                    </Form.Group>
+                    
+                    <Button
+                      type="submit"
+                      variant="primary"
+                      className="w-100 mt-3"
+                      disabled={loading}
+                    >
+                      {loading ? (
+                        <>
+                          <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                          Signing in...
+                        </>
+                      ) : "Sign In"}
+                    </Button>
+                    
+                    <div className="text-center mt-4">
+                      <p className="text-muted mb-0">
+                        Don't have an account?{' '}
+                        <Link to="/register" className="text-decoration-none">
+                          Sign up
+                        </Link>
+                      </p>
+                    </div>
+                  </Form>
+                </Card.Body>
+              </Card>
               
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  name="email"
-                  type="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  placeholder="Enter your email"
-                  required
-                  className="w-full"
-                />
+              {/* Demo accounts */}
+              <div className="mt-4">
+                <Card className="border-0 shadow-sm">
+                  <Card.Body>
+                    <h5 className="card-title mb-3">Demo Accounts</h5>
+                    <Row>
+                      <Col md={4} className="mb-3 mb-md-0">
+                        <div className="border rounded p-2">
+                          <p className="fw-bold mb-1">Regular User</p>
+                          <p className="small mb-0">email: user@example.com</p>
+                          <p className="small mb-0">password: password123</p>
+                        </div>
+                      </Col>
+                      <Col md={4} className="mb-3 mb-md-0">
+                        <div className="border rounded p-2">
+                          <p className="fw-bold mb-1">Moderator</p>
+                          <p className="small mb-0">email: mod@example.com</p>
+                          <p className="small mb-0">password: password123</p>
+                        </div>
+                      </Col>
+                      <Col md={4}>
+                        <div className="border rounded p-2">
+                          <p className="fw-bold mb-1">Admin</p>
+                          <p className="small mb-0">email: admin@example.com</p>
+                          <p className="small mb-0">password: password123</p>
+                        </div>
+                      </Col>
+                    </Row>
+                  </Card.Body>
+                </Card>
+                
+                <Alert variant="info" className="mt-3 mb-0">
+                  <div className="d-flex">
+                    <i className="bi bi-info-circle me-2 fs-5"></i>
+                    <div>
+                      <strong>Dashboard Access:</strong> After login, admin and moderator users can access their respective dashboards from the user menu in the top-right corner or from the user dashboard.
+                    </div>
+                  </div>
+                </Alert>
               </div>
-              
-              <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <Label htmlFor="password">Password</Label>
-                  <Link 
-                    to="/forgot-password" 
-                    className="text-xs text-hotel-500 hover:text-hotel-600"
-                  >
-                    Forgot password?
-                  </Link>
-                </div>
-                <div className="relative">
-                  <Input
-                    id="password"
-                    name="password"
-                    type={showPassword ? "text" : "password"}
-                    value={formData.password}
-                    onChange={handleChange}
-                    placeholder="Enter your password"
-                    required
-                    className="w-full pr-10"
-                  />
-                  <button
-                    type="button"
-                    onClick={toggleShowPassword}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
-                  >
-                    {showPassword ? (
-                      <EyeOff className="h-4 w-4" />
-                    ) : (
-                      <Eye className="h-4 w-4" />
-                    )}
-                  </button>
-                </div>
-              </div>
-              
-              <Button
-                type="submit"
-                className="w-full bg-hotel-500 hover:bg-hotel-600"
-                disabled={loading}
-              >
-                {loading ? "Signing in..." : "Sign In"}
-              </Button>
-              
-              <p className="text-center text-sm mt-6 text-muted-foreground">
-                Don't have an account?{' '}
-                <Link to="/register" className="text-hotel-500 hover:text-hotel-600 font-medium">
-                  Sign up
-                </Link>
-              </p>
-            </form>
-          </div>
-          
-          {/* Demo accounts and dashboard access info */}
-          <div className="mt-8 space-y-4">
-            <Alert>
-              <Info className="h-4 w-4" />
-              <AlertTitle>Dashboard Access</AlertTitle>
-              <AlertDescription>
-                After login, admin and moderator users can access their respective dashboards from the user menu in the top-right corner or from the user dashboard.
-              </AlertDescription>
-            </Alert>
-            
-            <div className="text-center">
-              <p className="text-sm text-muted-foreground mb-2">Demo Accounts</p>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-xs">
-                <div className="p-2 bg-white rounded border border-border">
-                  <p className="font-semibold mb-1">Regular User</p>
-                  <p>email: user@example.com</p>
-                  <p>password: password123</p>
-                </div>
-                <div className="p-2 bg-white rounded border border-border">
-                  <p className="font-semibold mb-1">Moderator</p>
-                  <p>email: mod@example.com</p>
-                  <p>password: password123</p>
-                </div>
-                <div className="p-2 bg-white rounded border border-border">
-                  <p className="font-semibold mb-1">Admin</p>
-                  <p>email: admin@example.com</p>
-                  <p>password: password123</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+            </Col>
+          </Row>
+        </Container>
       </main>
       
       <Footer />
