@@ -1,199 +1,218 @@
 
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { format } from 'date-fns';
+import { Calendar } from '@/components/ui/calendar';
 import { Button } from '@/components/ui/button';
-import { Calendar as CalendarIcon, Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Calendar } from '@/components/ui/calendar';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
-import { format } from 'date-fns';
-import { SearchModel } from '@/models';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Slider } from '@/components/ui/slider';
+import { cn } from '@/lib/utils';
+import { CalendarIcon, Users, MapPin, Search, DollarSign } from 'lucide-react';
 
-const SearchForm = ({ variant = 'default' }) => {
-  const navigate = useNavigate();
-  const [city, setCity] = useState('');
-  const [checkIn, setCheckIn] = useState(null);
-  const [checkOut, setCheckOut] = useState(null);
-  const [guests, setGuests] = useState(1);
-  const [priceRange, setPriceRange] = useState([50, 500]);
-  
-  // Load saved search params if available
+const SearchForm = ({ initialValues = {}, onSearch }) => {
+  const [searchParams, setSearchParams] = useState({
+    city: '',
+    checkIn: null,
+    checkOut: null,
+    guests: 1,
+    minPrice: 0,
+    maxPrice: 1000,
+    ...initialValues
+  });
+
+  const [priceRange, setPriceRange] = useState([
+    searchParams.minPrice || 0,
+    searchParams.maxPrice || 1000
+  ]);
+
+  // Update the search params when initialValues changes
   useEffect(() => {
-    const savedParams = SearchModel.getSearchParams();
-    if (savedParams) {
-      setCity(savedParams.city || '');
-      setCheckIn(savedParams.checkIn ? new Date(savedParams.checkIn) : null);
-      setCheckOut(savedParams.checkOut ? new Date(savedParams.checkOut) : null);
-      setGuests(savedParams.guests || 1);
-      setPriceRange(savedParams.priceRange || [50, 500]);
+    if (initialValues) {
+      setSearchParams(prev => ({
+        ...prev,
+        ...initialValues
+      }));
+      
+      setPriceRange([
+        initialValues.minPrice || 0,
+        initialValues.maxPrice || 1000
+      ]);
     }
-  }, []);
+  }, [initialValues]);
 
-  const handleSearch = () => {
-    // Save search parameters for dynamic pricing
-    const searchParams = {
-      city,
-      checkIn,
-      checkOut,
-      guests,
-      priceRange
-    };
-    
-    SearchModel.saveSearchParams(searchParams);
-    
-    // Navigate to hotels page with search parameters
-    navigate(`/hotels?city=${city}&guests=${guests}&priceMin=${priceRange[0]}&priceMax=${priceRange[1]}`);
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setSearchParams(prev => ({
+      ...prev,
+      [name]: value
+    }));
   };
 
-  // Check if search button should be disabled
-  const isSearchDisabled = !city;
+  const handleGuestsChange = (e) => {
+    const value = parseInt(e.target.value);
+    if (!isNaN(value) && value > 0) {
+      setSearchParams(prev => ({
+        ...prev,
+        guests: value
+      }));
+    }
+  };
+
+  const handlePriceRangeChange = (value) => {
+    setPriceRange(value);
+    setSearchParams(prev => ({
+      ...prev,
+      minPrice: value[0],
+      maxPrice: value[1]
+    }));
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onSearch(searchParams);
+  };
 
   return (
-    <div className={`w-full rounded-lg shadow-md overflow-hidden ${variant === 'hero' ? 'bg-white/95 backdrop-blur-sm' : 'bg-white'}`}>
-      <div className={`grid grid-cols-1 ${variant === 'hero' ? 'md:grid-cols-12 gap-0' : 'md:grid-cols-2 lg:grid-cols-4 gap-4'} p-4`}>
-        {/* Location */}
-        <div className={`space-y-2 ${variant === 'hero' ? 'md:col-span-4' : ''}`}>
-          <Label htmlFor="location">Location</Label>
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Destination */}
+        <div>
+          <Label htmlFor="city">Destination</Label>
+          <div className="relative mt-1">
+            <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
             <Input
-              id="location"
-              placeholder="Where are you going?"
-              value={city}
-              onChange={(e) => setCity(e.target.value)}
-              className="pl-9 w-full"
+              id="city"
+              name="city"
+              placeholder="City or destination"
+              value={searchParams.city}
+              onChange={handleInputChange}
+              className="pl-10"
             />
           </div>
         </div>
 
-        {/* Check-in */}
-        <div className={`space-y-2 ${variant === 'hero' ? 'md:col-span-2' : ''}`}>
-          <Label>Check-in</Label>
+        {/* Check-in Date */}
+        <div>
+          <Label>Check-in Date</Label>
           <Popover>
             <PopoverTrigger asChild>
               <Button
                 variant="outline"
-                className="w-full justify-start text-left font-normal"
+                className={cn(
+                  "w-full mt-1 justify-start text-left font-normal",
+                  !searchParams.checkIn && "text-muted-foreground"
+                )}
               >
                 <CalendarIcon className="mr-2 h-4 w-4" />
-                {checkIn ? format(checkIn, 'PPP') : <span className="text-muted-foreground">Select date</span>}
+                {searchParams.checkIn ? (
+                  format(searchParams.checkIn, "PPP")
+                ) : (
+                  "Select date"
+                )}
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-auto p-0">
+            <PopoverContent className="w-auto p-0" align="start">
               <Calendar
                 mode="single"
-                selected={checkIn}
-                onSelect={setCheckIn}
+                selected={searchParams.checkIn}
+                onSelect={(date) =>
+                  setSearchParams(prev => ({ ...prev, checkIn: date }))
+                }
+                disabled={(date) => {
+                  const today = new Date();
+                  today.setHours(0, 0, 0, 0);
+                  return date < today;
+                }}
                 initialFocus
-                disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
               />
             </PopoverContent>
           </Popover>
         </div>
 
-        {/* Check-out */}
-        <div className={`space-y-2 ${variant === 'hero' ? 'md:col-span-2' : ''}`}>
-          <Label>Check-out</Label>
+        {/* Check-out Date */}
+        <div>
+          <Label>Check-out Date</Label>
           <Popover>
             <PopoverTrigger asChild>
               <Button
                 variant="outline"
-                className="w-full justify-start text-left font-normal"
+                className={cn(
+                  "w-full mt-1 justify-start text-left font-normal",
+                  !searchParams.checkOut && "text-muted-foreground"
+                )}
               >
                 <CalendarIcon className="mr-2 h-4 w-4" />
-                {checkOut ? format(checkOut, 'PPP') : <span className="text-muted-foreground">Select date</span>}
+                {searchParams.checkOut ? (
+                  format(searchParams.checkOut, "PPP")
+                ) : (
+                  "Select date"
+                )}
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-auto p-0">
+            <PopoverContent className="w-auto p-0" align="start">
               <Calendar
                 mode="single"
-                selected={checkOut}
-                onSelect={setCheckOut}
+                selected={searchParams.checkOut}
+                onSelect={(date) =>
+                  setSearchParams(prev => ({ ...prev, checkOut: date }))
+                }
+                disabled={(date) => {
+                  const today = new Date();
+                  today.setHours(0, 0, 0, 0);
+                  return date < today || (searchParams.checkIn && date <= searchParams.checkIn);
+                }}
                 initialFocus
-                disabled={(date) => date <= checkIn || date < new Date(new Date().setHours(0, 0, 0, 0))}
               />
             </PopoverContent>
           </Popover>
         </div>
 
         {/* Guests */}
-        <div className={`space-y-2 ${variant === 'hero' ? 'md:col-span-2' : ''}`}>
+        <div>
           <Label htmlFor="guests">Guests</Label>
-          <Input
-            id="guests"
-            type="number"
-            min={1}
-            max={10}
-            value={guests}
-            onChange={(e) => setGuests(parseInt(e.target.value) || 1)}
-            className="w-full"
-          />
-        </div>
-
-        {/* Price Range Slider - Only shown in expanded form */}
-        {variant !== 'hero' && (
-          <div className="space-y-2 md:col-span-2">
-            <Label>Price Range ($ per night)</Label>
-            <div className="px-2 pt-6 pb-2">
-              <Slider
-                defaultValue={priceRange}
-                min={0}
-                max={1000}
-                step={10}
-                value={priceRange}
-                onValueChange={setPriceRange}
-                className="my-5"
-              />
-              <div className="flex justify-between text-sm text-muted-foreground">
-                <span>${priceRange[0]}</span>
-                <span>${priceRange[1]}</span>
-              </div>
-            </div>
+          <div className="relative mt-1">
+            <Users className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+            <Input
+              id="guests"
+              name="guests"
+              type="number"
+              min="1"
+              placeholder="Number of guests"
+              value={searchParams.guests}
+              onChange={handleGuestsChange}
+              className="pl-10"
+            />
           </div>
-        )}
-
-        {/* Search Button */}
-        <div className={`${variant === 'hero' ? 'md:col-span-2' : 'md:col-span-2 lg:col-span-1'} flex items-end`}>
-          <Button
-            onClick={handleSearch}
-            disabled={isSearchDisabled}
-            className="w-full bg-hotel-500 hover:bg-hotel-600"
-          >
-            Search
-          </Button>
         </div>
       </div>
 
-      {/* Expanded Price Range - Only shown in hero form */}
-      {variant === 'hero' && (
-        <div className="px-4 pb-4 pt-0">
-          <div className="space-y-2">
-            <Label>Price Range ($ per night)</Label>
-            <div className="px-2 pt-2 pb-1">
-              <Slider
-                defaultValue={priceRange}
-                min={0}
-                max={1000}
-                step={10}
-                value={priceRange}
-                onValueChange={setPriceRange}
-                className="my-4"
-              />
-              <div className="flex justify-between text-sm text-muted-foreground">
-                <span>${priceRange[0]}</span>
-                <span>${priceRange[1]}</span>
-              </div>
-            </div>
-          </div>
+      {/* Price Range */}
+      <div>
+        <div className="flex justify-between items-center">
+          <Label className="mb-2">Price Range</Label>
+          <span className="text-sm">
+            ${priceRange[0]} - ${priceRange[1]}
+          </span>
         </div>
-      )}
-    </div>
+        <Slider
+          defaultValue={[0, 1000]}
+          value={priceRange}
+          onValueChange={handlePriceRangeChange}
+          min={0}
+          max={1000}
+          step={10}
+          className="my-4"
+        />
+      </div>
+
+      <div className="flex justify-end">
+        <Button type="submit" className="bg-hotel-500 hover:bg-hotel-600">
+          <Search className="mr-2 h-4 w-4" />
+          Search Hotels
+        </Button>
+      </div>
+    </form>
   );
 };
 

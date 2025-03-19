@@ -5,42 +5,20 @@ const Worker = require('../models/Worker');
 const User = require('../models/User');
 const Hotel = require('../models/Hotel');
 const Room = require('../models/Room');
-const Moderator = require('../models/Moderator');
-const { protect, isAdmin, isModerator } = require('../middleware/auth');
+const { protect } = require('../middleware/auth');
 
 // @route   GET /api/workers
 // @desc    Get all workers
-// @access  Private (Admin or Moderator)
+// @access  Private
 router.get('/', protect, async (req, res) => {
   try {
-    let query = {};
-    
-    // If user is moderator (not admin), only return workers for their hotels
-    if (!req.user.isAdmin && req.user.isModerator) {
-      const moderator = await Moderator.findOne({ userId: req.user._id });
-      
-      if (!moderator) {
-        return res.status(404).json({
-          success: false,
-          message: 'Moderator not found'
-        });
-      }
-      
-      // Only get workers for hotels this moderator manages
-      query.hotelId = { $in: moderator.assignedHotels };
-    }
-    
-    const workers = await Worker.find(query)
+    const workers = await Worker.find()
       .populate('userId', 'username email')
-      .populate('hotelId', 'name city')
-      .populate({
-        path: 'assignedRooms.roomId',
-        select: 'title price maxPeople roomNumbers'
-      });
+      .populate('hotelId', 'name city');
     
     res.status(200).json(workers);
   } catch (err) {
-    res.status(400).json({
+    res.status(500).json({
       success: false,
       message: err.message
     });
@@ -49,51 +27,31 @@ router.get('/', protect, async (req, res) => {
 
 // @route   GET /api/workers/:id
 // @desc    Get single worker
-// @access  Private (Admin or Moderator)
+// @access  Private
 router.get('/:id', protect, async (req, res) => {
   try {
     const worker = await Worker.findById(req.params.id)
-      .populate('userId', 'username email')
-      .populate('hotelId', 'name city')
+      .populate('userId', 'username email country city phone')
+      .populate('hotelId', 'name city address')
       .populate({
         path: 'assignedRooms.roomId',
-        select: 'title price maxPeople roomNumbers'
+        select: 'title desc roomNumbers price',
       })
-      .populate('assignedRooms.assignedBy', 'userId');
+      .populate({
+        path: 'cleanedRooms.roomId',
+        select: 'title desc roomNumbers price',
+      });
     
     if (!worker) {
       return res.status(404).json({
         success: false,
-        message: `No worker with the id of ${req.params.id}`
+        message: 'Worker not found'
       });
-    }
-    
-    // If user is moderator (not admin), verify they manage this worker's hotel
-    if (!req.user.isAdmin && req.user.isModerator) {
-      const moderator = await Moderator.findOne({ userId: req.user._id });
-      
-      if (!moderator) {
-        return res.status(404).json({
-          success: false,
-          message: 'Moderator not found'
-        });
-      }
-      
-      const canAccessHotel = moderator.assignedHotels.some(
-        hotelId => hotelId.toString() === worker.hotelId.toString()
-      );
-      
-      if (!canAccessHotel) {
-        return res.status(403).json({
-          success: false,
-          message: 'Not authorized to access this worker'
-        });
-      }
     }
     
     res.status(200).json(worker);
   } catch (err) {
-    res.status(400).json({
+    res.status(500).json({
       success: false,
       message: err.message
     });
@@ -102,73 +60,54 @@ router.get('/:id', protect, async (req, res) => {
 
 // @route   POST /api/workers
 // @desc    Create worker
-// @access  Private (Admin or Moderator)
-router.post('/', protect, isModerator, async (req, res) => {
+// @access  Private
+router.post('/', async (req, res) => {
   try {
-    const { userId, hotelId, name, role, email, phone } = req.body;
+    const { name, userId, hotelId, role, email, phone, isActive } = req.body;
     
-    // If creating a worker with userId, check if user exists
-    if (userId) {
-      const user = await User.findById(userId);
-      if (!user) {
-        return res.status(404).json({
-          success: false,
-          message: `No user with the id of ${userId}`
-        });
-      }
+    // Check if worker already exists
+    const existingWorker = await Worker.findOne({ userId });
+    
+    if (existingWorker) {
+      return res.status(400).json({
+        success: false,
+        message: 'This user is already a worker'
+      });
+    }
+    
+    // Check if user exists
+    const user = await User.findById(userId);
+    
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
     }
     
     // Check if hotel exists
     const hotel = await Hotel.findById(hotelId);
+    
     if (!hotel) {
       return res.status(404).json({
         success: false,
-        message: `No hotel with the id of ${hotelId}`
+        message: 'Hotel not found'
       });
     }
     
-    // If user is moderator (not admin), verify they manage this hotel
-    if (!req.user.isAdmin && req.user.isModerator) {
-      const moderator = await Moderator.findOne({ userId: req.user._id });
-      
-      if (!moderator) {
-        return res.status(404).json({
-          success: false,
-          message: 'Moderator not found'
-        });
-      }
-      
-      const canAccessHotel = moderator.assignedHotels.some(
-        moderatorHotelId => moderatorHotelId.toString() === hotelId
-      );
-      
-      if (!canAccessHotel) {
-        return res.status(403).json({
-          success: false,
-          message: 'Not authorized to create workers for this hotel'
-        });
-      }
-    }
-    
-    // Create worker
     const worker = await Worker.create({
-      userId: userId || req.user._id,
-      hotelId,
       name,
+      userId,
+      hotelId,
       role,
       email,
       phone,
-      isActive: true
+      isActive: isActive !== undefined ? isActive : true
     });
     
-    // Populate the worker
-    const populatedWorker = await Worker.findById(worker._id)
-      .populate('userId', 'username email')
-      .populate('hotelId', 'name city');
-    
-    res.status(201).json(populatedWorker);
+    res.status(201).json(worker);
   } catch (err) {
-    res.status(400).json({
+    res.status(500).json({
       success: false,
       message: err.message
     });
@@ -177,71 +116,45 @@ router.post('/', protect, isModerator, async (req, res) => {
 
 // @route   PUT /api/workers/:id
 // @desc    Update worker
-// @access  Private (Admin or Moderator)
-router.put('/:id', protect, isModerator, async (req, res) => {
+// @access  Private
+router.put('/:id', protect, async (req, res) => {
   try {
+    const { name, role, email, phone, isActive, hotelId } = req.body;
+    
     const worker = await Worker.findById(req.params.id);
     
     if (!worker) {
       return res.status(404).json({
         success: false,
-        message: `No worker with the id of ${req.params.id}`
+        message: 'Worker not found'
       });
     }
     
-    // If user is moderator (not admin), verify they manage this worker's hotel
-    if (!req.user.isAdmin && req.user.isModerator) {
-      const moderator = await Moderator.findOne({ userId: req.user._id });
+    // Check if hotel exists if changing hotel
+    if (hotelId && hotelId !== worker.hotelId.toString()) {
+      const hotel = await Hotel.findById(hotelId);
       
-      if (!moderator) {
+      if (!hotel) {
         return res.status(404).json({
           success: false,
-          message: 'Moderator not found'
+          message: 'Hotel not found'
         });
-      }
-      
-      const canAccessHotel = moderator.assignedHotels.some(
-        hotelId => hotelId.toString() === worker.hotelId.toString()
-      );
-      
-      if (!canAccessHotel) {
-        return res.status(403).json({
-          success: false,
-          message: 'Not authorized to update this worker'
-        });
-      }
-      
-      // If changing hotel, verify moderator manages new hotel
-      if (req.body.hotelId && req.body.hotelId !== worker.hotelId.toString()) {
-        const canAccessNewHotel = moderator.assignedHotels.some(
-          hotelId => hotelId.toString() === req.body.hotelId
-        );
-        
-        if (!canAccessNewHotel) {
-          return res.status(403).json({
-            success: false,
-            message: 'Not authorized to move worker to this hotel'
-          });
-        }
       }
     }
     
-    // Update worker
-    const updatedWorker = await Worker.findByIdAndUpdate(
-      req.params.id,
-      { $set: req.body },
-      { new: true, runValidators: true }
-    )
-      .populate('userId', 'username email')
-      .populate('hotelId', 'name city')
-      .populate({
-        path: 'assignedRooms.roomId',
-        select: 'title price maxPeople roomNumbers'
-      });
+    // Update fields
+    if (name) worker.name = name;
+    if (role) worker.role = role;
+    if (email) worker.email = email;
+    if (phone) worker.phone = phone;
+    if (isActive !== undefined) worker.isActive = isActive;
+    if (hotelId) worker.hotelId = hotelId;
     
-    res.status(200).json(updatedWorker);
+    await worker.save();
+    
+    res.status(200).json(worker);
   } catch (err) {
-    res.status(400).json({
+    res.status(500).json({
       success: false,
       message: err.message
     });
@@ -250,50 +163,26 @@ router.put('/:id', protect, isModerator, async (req, res) => {
 
 // @route   DELETE /api/workers/:id
 // @desc    Delete worker
-// @access  Private (Admin or Moderator)
-router.delete('/:id', protect, isModerator, async (req, res) => {
+// @access  Private
+router.delete('/:id', protect, async (req, res) => {
   try {
     const worker = await Worker.findById(req.params.id);
     
     if (!worker) {
       return res.status(404).json({
         success: false,
-        message: `No worker with the id of ${req.params.id}`
+        message: 'Worker not found'
       });
     }
     
-    // If user is moderator (not admin), verify they manage this worker's hotel
-    if (!req.user.isAdmin && req.user.isModerator) {
-      const moderator = await Moderator.findOne({ userId: req.user._id });
-      
-      if (!moderator) {
-        return res.status(404).json({
-          success: false,
-          message: 'Moderator not found'
-        });
-      }
-      
-      const canAccessHotel = moderator.assignedHotels.some(
-        hotelId => hotelId.toString() === worker.hotelId.toString()
-      );
-      
-      if (!canAccessHotel) {
-        return res.status(403).json({
-          success: false,
-          message: 'Not authorized to delete this worker'
-        });
-      }
-    }
-    
-    // Delete worker
-    await worker.deleteOne();
+    await worker.remove();
     
     res.status(200).json({
       success: true,
-      message: 'Worker deleted successfully'
+      message: 'Worker removed'
     });
   } catch (err) {
-    res.status(400).json({
+    res.status(500).json({
       success: false,
       message: err.message
     });
@@ -301,103 +190,53 @@ router.delete('/:id', protect, isModerator, async (req, res) => {
 });
 
 // @route   GET /api/workers/hotel/:hotelId
-// @desc    Get workers for a specific hotel
-// @access  Private (Admin or Moderator)
-router.get('/hotel/:hotelId', protect, isModerator, async (req, res) => {
+// @desc    Get workers by hotel id
+// @access  Private
+router.get('/hotel/:hotelId', protect, async (req, res) => {
   try {
-    // Check if hotel exists
-    const hotel = await Hotel.findById(req.params.hotelId);
-    if (!hotel) {
-      return res.status(404).json({
-        success: false,
-        message: `No hotel with the id of ${req.params.hotelId}`
-      });
-    }
-    
-    // If user is moderator (not admin), verify they manage this hotel
-    if (!req.user.isAdmin && req.user.isModerator) {
-      const moderator = await Moderator.findOne({ userId: req.user._id });
-      
-      if (!moderator) {
-        return res.status(404).json({
-          success: false,
-          message: 'Moderator not found'
-        });
-      }
-      
-      const canAccessHotel = moderator.assignedHotels.some(
-        hotelId => hotelId.toString() === req.params.hotelId
-      );
-      
-      if (!canAccessHotel) {
-        return res.status(403).json({
-          success: false,
-          message: 'Not authorized to view workers for this hotel'
-        });
-      }
-    }
-    
     const workers = await Worker.find({ hotelId: req.params.hotelId })
       .populate('userId', 'username email')
-      .populate('hotelId', 'name city')
-      .populate({
-        path: 'assignedRooms.roomId',
-        select: 'title price maxPeople roomNumbers'
-      });
+      .populate('hotelId', 'name city');
     
     res.status(200).json(workers);
   } catch (err) {
-    res.status(400).json({
+    res.status(500).json({
       success: false,
       message: err.message
     });
   }
 });
 
-// @route   PUT /api/workers/:workerId/assign/:roomId
-// @desc    Assign a room to a worker for cleaning
-// @access  Private (Admin or Moderator)
-router.put('/:workerId/assign/:roomId', protect, isModerator, async (req, res) => {
+// @route   PUT /api/workers/:id/assign/:roomId
+// @desc    Assign room to worker
+// @access  Private
+router.put('/:id/assign/:roomId', protect, async (req, res) => {
   try {
-    const worker = await Worker.findById(req.params.workerId);
+    const worker = await Worker.findById(req.params.id);
     
     if (!worker) {
       return res.status(404).json({
         success: false,
-        message: `No worker with the id of ${req.params.workerId}`
+        message: 'Worker not found'
       });
     }
     
+    // Check if room exists
     const room = await Room.findById(req.params.roomId);
     
     if (!room) {
       return res.status(404).json({
         success: false,
-        message: `No room with the id of ${req.params.roomId}`
+        message: 'Room not found'
       });
     }
     
-    // If user is moderator (not admin), verify they manage this worker's hotel
-    if (!req.user.isAdmin && req.user.isModerator) {
-      const moderator = await Moderator.findOne({ userId: req.user._id });
-      
-      if (!moderator) {
-        return res.status(404).json({
-          success: false,
-          message: 'Moderator not found'
-        });
-      }
-      
-      const canAccessHotel = moderator.assignedHotels.some(
-        hotelId => hotelId.toString() === worker.hotelId.toString()
-      );
-      
-      if (!canAccessHotel) {
-        return res.status(403).json({
-          success: false,
-          message: 'Not authorized to assign rooms to this worker'
-        });
-      }
+    // Check if room belongs to worker's hotel
+    if (room.hotelId.toString() !== worker.hotelId.toString()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Room does not belong to worker\'s hotel'
+      });
     }
     
     // Check if room is already assigned to this worker
@@ -415,85 +254,53 @@ router.put('/:workerId/assign/:roomId', protect, isModerator, async (req, res) =
     // Add room to worker's assigned rooms
     worker.assignedRooms.push({
       roomId: req.params.roomId,
-      assignedBy: req.user.moderatorDetails ? req.user.moderatorDetails._id : null,
+      assignedBy: req.user.id,
       assignedAt: new Date(),
       status: 'pending'
     });
     
-    await worker.save();
-    
-    // Update room as needing cleaning
+    // Update room cleaning status
     room.needsCleaning = true;
-    room.isCleaned = false;
-    await room.save();
     
-    // Get the updated worker with populated fields
-    const updatedWorker = await Worker.findById(req.params.workerId)
-      .populate('userId', 'username email')
-      .populate('hotelId', 'name city')
-      .populate({
-        path: 'assignedRooms.roomId',
-        select: 'title price maxPeople roomNumbers'
-      })
-      .populate('assignedRooms.assignedBy', 'userId');
+    await Promise.all([
+      worker.save(),
+      room.save()
+    ]);
     
-    res.status(200).json(updatedWorker);
+    res.status(200).json(worker);
   } catch (err) {
-    res.status(400).json({
+    res.status(500).json({
       success: false,
       message: err.message
     });
   }
 });
 
-// @route   PUT /api/workers/:workerId/complete/:roomId
-// @desc    Mark a room as cleaned by worker
+// @route   PUT /api/workers/:id/complete/:roomId
+// @desc    Mark room as cleaned by worker
 // @access  Private
-router.put('/:workerId/complete/:roomId', protect, async (req, res) => {
+router.put('/:id/complete/:roomId', protect, async (req, res) => {
   try {
-    const worker = await Worker.findById(req.params.workerId);
+    const worker = await Worker.findById(req.params.id);
     
     if (!worker) {
       return res.status(404).json({
         success: false,
-        message: `No worker with the id of ${req.params.workerId}`
+        message: 'Worker not found'
       });
     }
     
-    // Verify the user is either the worker, a moderator for this hotel, or an admin
-    const isWorker = worker.userId.toString() === req.user._id.toString();
-    let hasAccess = req.user.isAdmin || isWorker;
-    
-    if (!hasAccess && req.user.isModerator) {
-      const moderator = await Moderator.findOne({ userId: req.user._id });
-      
-      if (moderator) {
-        const canAccessHotel = moderator.assignedHotels.some(
-          hotelId => hotelId.toString() === worker.hotelId.toString()
-        );
-        
-        hasAccess = canAccessHotel;
-      }
-    }
-    
-    if (!hasAccess) {
-      return res.status(403).json({
-        success: false,
-        message: 'Not authorized to update this worker\'s assignments'
-      });
-    }
-    
-    // Find the assigned room
+    // Check if room exists
     const room = await Room.findById(req.params.roomId);
     
     if (!room) {
       return res.status(404).json({
         success: false,
-        message: `No room with the id of ${req.params.roomId}`
+        message: 'Room not found'
       });
     }
     
-    // Find the assignment in worker's assigned rooms
+    // Check if room is assigned to worker
     const assignmentIndex = worker.assignedRooms.findIndex(
       assignment => assignment.roomId.toString() === req.params.roomId
     );
@@ -505,35 +312,32 @@ router.put('/:workerId/complete/:roomId', protect, async (req, res) => {
       });
     }
     
-    // Get the assignment and remove it from assigned rooms
-    const assignment = worker.assignedRooms[assignmentIndex];
+    // Remove room from assigned rooms
     worker.assignedRooms.splice(assignmentIndex, 1);
     
-    // Add room to worker's cleaned rooms
+    // Add to cleaned rooms
     worker.cleanedRooms.push({
       roomId: req.params.roomId,
       cleanedAt: new Date()
     });
     
-    await worker.save();
-    
-    // Update room status
+    // Update room cleaning status
     room.isCleaned = true;
     room.needsCleaning = false;
     room.lastCleanedAt = new Date();
     room.cleaningHistory.push({
-      cleanedBy: req.params.workerId,
+      cleanedBy: worker._id,
       cleanedAt: new Date()
     });
     
-    await room.save();
+    await Promise.all([
+      worker.save(),
+      room.save()
+    ]);
     
-    res.status(200).json({
-      success: true,
-      message: 'Room marked as cleaned successfully'
-    });
+    res.status(200).json(worker);
   } catch (err) {
-    res.status(400).json({
+    res.status(500).json({
       success: false,
       message: err.message
     });

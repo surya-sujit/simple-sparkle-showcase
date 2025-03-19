@@ -17,11 +17,11 @@ exports.protect = async (req, res, next) => {
     token = req.headers.authorization.split(' ')[1];
   }
 
-  // Make sure token exists
+  // Check if token exists
   if (!token) {
     return res.status(401).json({
       success: false,
-      message: 'Not authorized to access this route',
+      message: 'Not authorized to access this route'
     });
   }
 
@@ -29,84 +29,54 @@ exports.protect = async (req, res, next) => {
     // Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    // Get user from database
-    const user = await User.findById(decoded.id);
-    
-    if (!user) {
-      return res.status(401).json({
-        success: false,
-        message: 'User not found',
-      });
-    }
-    
-    // Check if user is an admin
-    const admin = await Admin.findOne({ userId: user._id });
-    
-    // Check if user is a moderator
-    const moderator = await Moderator.findOne({ userId: user._id });
-    
-    // Check if user is a worker
-    const worker = await Worker.findOne({ userId: user._id });
-    
-    // Add user roles to request object
-    user.isAdmin = !!admin;
-    user.isModerator = !!moderator;
-    user.isWorker = !!worker;
-    
-    // If user is an admin, add admin object to request
-    if (admin) {
-      user.adminDetails = admin;
-    }
-    
-    // If user is a moderator, add moderator object to request
-    if (moderator) {
-      user.moderatorDetails = moderator;
-    }
-    
-    // If user is a worker, add worker object to request
-    if (worker) {
-      user.workerDetails = worker;
-    }
-    
-    req.user = user;
+    // Get user from the token
+    req.user = await User.findById(decoded.id).select('-password');
+
     next();
   } catch (err) {
     return res.status(401).json({
       success: false,
-      message: 'Not authorized to access this route',
+      message: 'Not authorized to access this route'
     });
   }
 };
 
-// Admin middleware
-exports.isAdmin = async (req, res, next) => {
-  if (!req.user.isAdmin) {
-    return res.status(403).json({
-      success: false,
-      message: 'Access denied: Admin only',
-    });
-  }
-  next();
-};
+// Grant access to specific roles
+exports.authorize = (...roles) => {
+  return async (req, res, next) => {
+    try {
+      // Check if user is an admin
+      const admin = await Admin.findOne({ userId: req.user.id });
+      if (admin && roles.includes('admin')) {
+        return next();
+      }
 
-// Moderator middleware
-exports.isModerator = async (req, res, next) => {
-  if (!req.user.isModerator && !req.user.isAdmin) {
-    return res.status(403).json({
-      success: false,
-      message: 'Access denied: Moderator or Admin only',
-    });
-  }
-  next();
-};
+      // Check if user is a moderator
+      const moderator = await Moderator.findOne({ userId: req.user.id });
+      if (moderator && roles.includes('moderator')) {
+        return next();
+      }
 
-// Worker middleware
-exports.isWorker = async (req, res, next) => {
-  if (!req.user.isWorker && !req.user.isModerator && !req.user.isAdmin) {
-    return res.status(403).json({
-      success: false,
-      message: 'Access denied: Worker, Moderator or Admin only',
-    });
-  }
-  next();
+      // Check if user is a worker
+      const worker = await Worker.findOne({ userId: req.user.id });
+      if (worker && roles.includes('worker')) {
+        return next();
+      }
+
+      // If user doesn't have any of the required roles
+      if (roles.includes('user')) {
+        return next();
+      }
+
+      return res.status(403).json({
+        success: false,
+        message: `User role not authorized to access this route`
+      });
+    } catch (err) {
+      return res.status(500).json({
+        success: false,
+        message: err.message
+      });
+    }
+  };
 };

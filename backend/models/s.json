@@ -1,0 +1,31 @@
+
+{
+  "modelFiles": [
+    "User.js",
+    "Hotel.js",
+    "Room.js",
+    "Booking.js",
+    "Admin.js",
+    "Moderator.js",
+    "Worker.js"
+  ],
+  "routeFiles": [
+    "auth.js",
+    "users.js",
+    "hotels.js",
+    "rooms.js",
+    "bookings.js",
+    "workers.js",
+    "moderators.js",
+    "admins.js"
+  ],
+  "associations": {
+    "User": ["Booking", "Admin", "Moderator", "Worker"],
+    "Hotel": ["Room", "Moderator", "Worker"],
+    "Room": ["Booking", "Worker"],
+    "Booking": ["User", "Hotel", "Room"],
+    "Admin": ["User"],
+    "Moderator": ["User", "Hotel", "Worker"],
+    "Worker": ["User", "Hotel", "Room"]
+  }
+}
