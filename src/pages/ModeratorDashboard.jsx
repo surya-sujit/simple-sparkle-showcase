@@ -5,28 +5,8 @@ import { useAuth } from '@/context/AuthContext';
 import AuthGuard from '@/components/AuthGuard';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { 
-  Hotel, 
-  Users, 
-  UserCheck, 
-  Plus,
-  Edit, 
-  Trash, 
-  Bed,
-  Check,
-  X,
-  Calendar,
-  Eye,
-  Briefcase
-} from 'lucide-react';
 import { hotelAPI, roomAPI, userAPI, workerAPI, bookingAPI } from '@/services/api';
 import { toast } from 'sonner';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 
 const ModeratorDashboard = () => {
   const { state } = useAuth();
@@ -304,618 +284,663 @@ const ModeratorDashboard = () => {
   
   return (
     <AuthGuard requireModerator>
-      <div className="flex flex-col min-h-screen">
+      <div className="d-flex flex-column min-vh-100">
         <Navbar />
         
-        <main className="flex-grow py-12 bg-gray-50">
-          <div className="container-custom">
-            <header className="mb-8">
-              <h1 className="text-3xl font-bold">Moderator Dashboard</h1>
-              <p className="text-muted-foreground">
+        <main className="flex-grow-1 py-5 bg-light">
+          <div className="container">
+            <header className="mb-4">
+              <h1 className="display-5 fw-bold">Moderator Dashboard</h1>
+              <p className="text-muted">
                 Manage workers, rooms, and bookings
               </p>
             </header>
             
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-sm font-medium">
-                    Assigned Hotels
-                  </CardTitle>
-                  <Hotel className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{hotels.length}</div>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-sm font-medium">
-                    Workers
-                  </CardTitle>
-                  <UserCheck className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{workers.length}</div>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {workers.filter(w => w.isActive).length} active
-                  </p>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-sm font-medium">
-                    Rooms to Clean
-                  </CardTitle>
-                  <Bed className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">
-                    {rooms.filter(r => !r.isCleaned).length}
+            <div className="row mb-4">
+              <div className="col-md-3 mb-3 mb-md-0">
+                <div className="card h-100">
+                  <div className="card-body">
+                    <div className="d-flex justify-content-between align-items-center mb-2">
+                      <h6 className="card-subtitle text-muted">Assigned Hotels</h6>
+                      <i className="bi bi-building"></i>
+                    </div>
+                    <h2 className="card-title">{hotels.length}</h2>
                   </div>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    out of {rooms.length} total rooms
-                  </p>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
               
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-sm font-medium">
-                    Active Bookings
-                  </CardTitle>
-                  <Calendar className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">
-                    {bookings.filter(b => b.status === 'active' || b.status === 'confirmed').length}
+              <div className="col-md-3 mb-3 mb-md-0">
+                <div className="card h-100">
+                  <div className="card-body">
+                    <div className="d-flex justify-content-between align-items-center mb-2">
+                      <h6 className="card-subtitle text-muted">Workers</h6>
+                      <i className="bi bi-people"></i>
+                    </div>
+                    <h2 className="card-title">{workers.length}</h2>
+                    <p className="card-text text-muted small">
+                      {workers.filter(w => w.isActive).length} active
+                    </p>
                   </div>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    out of {bookings.length} total bookings
-                  </p>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
+              
+              <div className="col-md-3 mb-3 mb-md-0">
+                <div className="card h-100">
+                  <div className="card-body">
+                    <div className="d-flex justify-content-between align-items-center mb-2">
+                      <h6 className="card-subtitle text-muted">Rooms to Clean</h6>
+                      <i className="bi bi-house-door"></i>
+                    </div>
+                    <h2 className="card-title">{rooms.filter(r => !r.isCleaned).length}</h2>
+                    <p className="card-text text-muted small">
+                      out of {rooms.length} total rooms
+                    </p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="col-md-3">
+                <div className="card h-100">
+                  <div className="card-body">
+                    <div className="d-flex justify-content-between align-items-center mb-2">
+                      <h6 className="card-subtitle text-muted">Active Bookings</h6>
+                      <i className="bi bi-calendar-check"></i>
+                    </div>
+                    <h2 className="card-title">
+                      {bookings.filter(b => b.status === 'active' || b.status === 'confirmed').length}
+                    </h2>
+                    <p className="card-text text-muted small">
+                      out of {bookings.length} total bookings
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
             
-            <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="grid grid-cols-4 mb-8">
-                <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
-                <TabsTrigger value="workers">Workers</TabsTrigger>
-                <TabsTrigger value="rooms">Rooms</TabsTrigger>
-                <TabsTrigger value="bookings">Bookings</TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="dashboard" className="space-y-6">
-                <h2 className="text-xl font-semibold mb-4">Overview</h2>
-                <p className="text-muted-foreground mb-6">
+            <ul className="nav nav-tabs mb-4">
+              <li className="nav-item">
+                <button 
+                  className={`nav-link ${activeTab === 'dashboard' ? 'active' : ''}`}
+                  onClick={() => setActiveTab('dashboard')}
+                >
+                  Dashboard
+                </button>
+              </li>
+              <li className="nav-item">
+                <button 
+                  className={`nav-link ${activeTab === 'workers' ? 'active' : ''}`}
+                  onClick={() => setActiveTab('workers')}
+                >
+                  Workers
+                </button>
+              </li>
+              <li className="nav-item">
+                <button 
+                  className={`nav-link ${activeTab === 'rooms' ? 'active' : ''}`}
+                  onClick={() => setActiveTab('rooms')}
+                >
+                  Rooms
+                </button>
+              </li>
+              <li className="nav-item">
+                <button 
+                  className={`nav-link ${activeTab === 'bookings' ? 'active' : ''}`}
+                  onClick={() => setActiveTab('bookings')}
+                >
+                  Bookings
+                </button>
+              </li>
+            </ul>
+            
+            <div className="tab-content">
+              <div className={`tab-pane fade ${activeTab === 'dashboard' ? 'show active' : ''}`}>
+                <h2 className="h4 mb-4">Overview</h2>
+                <p className="text-muted mb-4">
                   Welcome to the StayHaven moderator dashboard. Here you can manage workers, room cleaning status, and view bookings.
                 </p>
                 
-                <h3 className="text-lg font-medium mb-3">Assigned Hotels</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+                <h3 className="h5 mb-3">Assigned Hotels</h3>
+                <div className="row mb-4">
                   {hotels.map(hotel => (
-                    <Card key={hotel._id} className="overflow-hidden">
-                      <div className="h-32 bg-gray-200">
-                        {hotel.photos && hotel.photos.length > 0 ? (
-                          <img 
-                            src={hotel.photos[0]} 
-                            alt={hotel.name} 
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center">
-                            <Hotel className="h-8 w-8 text-gray-400" />
-                          </div>
-                        )}
-                      </div>
-                      <CardContent className="p-4">
-                        <h4 className="font-semibold">{hotel.name}</h4>
-                        <p className="text-sm text-muted-foreground">{hotel.city}</p>
-                        <div className="flex justify-between mt-2 text-sm">
-                          <span>Rooms: {hotel.rooms?.length || 0}</span>
-                          <span>Rating: {hotel.rating || 'N/A'}</span>
+                    <div key={hotel._id} className="col-md-6 col-lg-4 mb-3">
+                      <div className="card h-100">
+                        <div className="card-img-top bg-light" style={{ height: '160px' }}>
+                          {hotel.photos && hotel.photos.length > 0 ? (
+                            <img 
+                              src={hotel.photos[0]} 
+                              alt={hotel.name} 
+                              className="w-100 h-100 object-fit-cover"
+                            />
+                          ) : (
+                            <div className="w-100 h-100 d-flex align-items-center justify-content-center">
+                              <i className="bi bi-building fs-1 text-secondary"></i>
+                            </div>
+                          )}
                         </div>
-                      </CardContent>
-                    </Card>
+                        <div className="card-body">
+                          <h4 className="card-title h5">{hotel.name}</h4>
+                          <p className="card-text text-muted small">{hotel.city}</p>
+                          <div className="d-flex justify-content-between mt-2 small">
+                            <span>Rooms: {hotel.rooms?.length || 0}</span>
+                            <span>Rating: {hotel.rating || 'N/A'}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   ))}
                 </div>
                 
-                <h3 className="text-lg font-medium mb-3">Recent Activity</h3>
-                <Card>
-                  <CardContent className="p-4">
-                    <ul className="space-y-3">
-                      <li className="flex items-center text-sm">
-                        <Check className="h-4 w-4 text-green-500 mr-2" />
+                <h3 className="h5 mb-3">Recent Activity</h3>
+                <div className="card">
+                  <div className="card-body">
+                    <ul className="list-group list-group-flush">
+                      <li className="list-group-item d-flex align-items-center py-2 px-0">
+                        <i className="bi bi-check-circle text-success me-2"></i>
                         <span>Room 101 marked as cleaned</span>
-                        <span className="ml-auto text-muted-foreground">2 hours ago</span>
+                        <span className="ms-auto text-muted small">2 hours ago</span>
                       </li>
-                      <li className="flex items-center text-sm">
-                        <UserCheck className="h-4 w-4 text-blue-500 mr-2" />
+                      <li className="list-group-item d-flex align-items-center py-2 px-0">
+                        <i className="bi bi-person-check text-primary me-2"></i>
                         <span>New worker Sarah Johnson added</span>
-                        <span className="ml-auto text-muted-foreground">Yesterday</span>
+                        <span className="ms-auto text-muted small">Yesterday</span>
                       </li>
-                      <li className="flex items-center text-sm">
-                        <X className="h-4 w-4 text-red-500 mr-2" />
+                      <li className="list-group-item d-flex align-items-center py-2 px-0">
+                        <i className="bi bi-x-circle text-danger me-2"></i>
                         <span>Room 205 marked as needs cleaning</span>
-                        <span className="ml-auto text-muted-foreground">2 days ago</span>
+                        <span className="ms-auto text-muted small">2 days ago</span>
                       </li>
                     </ul>
-                  </CardContent>
-                </Card>
-              </TabsContent>
+                  </div>
+                </div>
+              </div>
               
-              <TabsContent value="workers" className="space-y-6">
-                <div className="flex justify-between items-center mb-4">
-                  <h2 className="text-xl font-semibold">Workers</h2>
-                  <Button onClick={handleAddWorker} size="sm">
-                    <Plus className="h-4 w-4 mr-2" />
+              <div className={`tab-pane fade ${activeTab === 'workers' ? 'show active' : ''}`}>
+                <div className="d-flex justify-content-between align-items-center mb-4">
+                  <h2 className="h4 mb-0">Workers</h2>
+                  <button className="btn btn-primary" onClick={handleAddWorker}>
+                    <i className="bi bi-plus me-1"></i>
                     Add Worker
-                  </Button>
+                  </button>
                 </div>
                 
-                <div className="grid grid-cols-1 gap-4">
+                <div className="row">
                   {workers.map(worker => (
-                    <Card key={worker._id} className="overflow-hidden">
-                      <div className="p-4">
-                        <div className="flex justify-between">
-                          <div className="flex items-center">
-                            <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center mr-3">
-                              <UserCheck className="h-5 w-5 text-gray-500" />
-                            </div>
-                            <div>
-                              <h3 className="font-bold text-lg">{worker.name}</h3>
-                              <div className="flex items-center">
-                                <span className="text-sm text-muted-foreground mr-2">{worker.role}</span>
-                                {worker.isActive ? (
-                                  <span className="text-xs px-2 py-0.5 bg-green-100 text-green-800 rounded-full">Active</span>
-                                ) : (
-                                  <span className="text-xs px-2 py-0.5 bg-red-100 text-red-800 rounded-full">Inactive</span>
-                                )}
+                    <div key={worker._id} className="col-12 mb-3">
+                      <div className="card">
+                        <div className="card-body">
+                          <div className="d-flex justify-content-between">
+                            <div className="d-flex align-items-center">
+                              <div className="rounded-circle bg-light d-flex align-items-center justify-content-center me-3" style={{ width: '48px', height: '48px' }}>
+                                <i className="bi bi-person text-secondary fs-4"></i>
+                              </div>
+                              <div>
+                                <h3 className="card-title h5 mb-0">{worker.name}</h3>
+                                <div className="d-flex align-items-center">
+                                  <span className="text-muted small me-2">{worker.role}</span>
+                                  {worker.isActive ? (
+                                    <span className="badge bg-success-subtle text-success rounded-pill">Active</span>
+                                  ) : (
+                                    <span className="badge bg-danger-subtle text-danger rounded-pill">Inactive</span>
+                                  )}
+                                </div>
                               </div>
                             </div>
+                            <div>
+                              <button 
+                                className="btn btn-sm btn-outline-primary me-2"
+                                onClick={() => handleEditWorker(worker)}
+                              >
+                                <i className="bi bi-pencil"></i>
+                              </button>
+                              <button 
+                                className="btn btn-sm btn-outline-danger"
+                                onClick={() => handleDeleteWorker(worker._id || '')}
+                              >
+                                <i className="bi bi-trash"></i>
+                              </button>
+                            </div>
                           </div>
-                          <div className="flex space-x-2">
-                            <Button 
-                              variant="outline" 
-                              size="sm" 
-                              onClick={() => handleEditWorker(worker)}
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button 
-                              variant="destructive" 
-                              size="sm"
-                              onClick={() => handleDeleteWorker(worker._id || '')}
-                            >
-                              <Trash className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </div>
-                        <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
-                          <div>
-                            <span className="text-sm font-medium">Email: </span>
-                            <span className="text-sm">{worker.email}</span>
-                          </div>
-                          <div>
-                            <span className="text-sm font-medium">Phone: </span>
-                            <span className="text-sm">{worker.phone || 'N/A'}</span>
-                          </div>
-                          <div>
-                            <span className="text-sm font-medium">Hotel: </span>
-                            <span className="text-sm">
-                              {hotels.find(h => h._id === worker.hotelId)?.name || 'Unknown Hotel'}
-                            </span>
+                          <div className="row mt-3 text-muted small">
+                            <div className="col-md-4 mb-2 mb-md-0">
+                              <strong>Email:</strong> {worker.email}
+                            </div>
+                            <div className="col-md-4 mb-2 mb-md-0">
+                              <strong>Phone:</strong> {worker.phone || 'N/A'}
+                            </div>
+                            <div className="col-md-4">
+                              <strong>Hotel:</strong> {hotels.find(h => h._id === worker.hotelId)?.name || 'Unknown Hotel'}
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </Card>
+                    </div>
                   ))}
                   
                   {workers.length === 0 && (
-                    <Card className="p-8 text-center">
-                      <p className="text-muted-foreground">No workers found. Add a worker to get started.</p>
-                    </Card>
+                    <div className="col-12">
+                      <div className="card py-5">
+                        <div className="card-body text-center">
+                          <p className="text-muted">No workers found. Add a worker to get started.</p>
+                        </div>
+                      </div>
+                    </div>
                   )}
                 </div>
-              </TabsContent>
+              </div>
               
-              <TabsContent value="rooms" className="space-y-6">
-                <div className="flex justify-between items-center mb-4">
-                  <h2 className="text-xl font-semibold">Room Management</h2>
-                  <Button onClick={handleAddRoom} size="sm">
-                    <Plus className="h-4 w-4 mr-2" />
+              <div className={`tab-pane fade ${activeTab === 'rooms' ? 'show active' : ''}`}>
+                <div className="d-flex justify-content-between align-items-center mb-4">
+                  <h2 className="h4 mb-0">Room Management</h2>
+                  <button className="btn btn-primary" onClick={handleAddRoom}>
+                    <i className="bi bi-plus me-1"></i>
                     Add Room
-                  </Button>
+                  </button>
                 </div>
                 
-                <div className="grid grid-cols-1 gap-4">
+                <div className="row">
                   {rooms.map(room => {
                     const hotel = hotels.find(h => h._id === room.hotelId || h.rooms?.includes(room._id || ''));
                     
                     return (
-                      <Card key={room._id} className="overflow-hidden">
-                        <div className="p-4">
-                          <div className="flex justify-between">
-                            <div>
-                              <h3 className="font-bold text-lg">{room.title}</h3>
-                              <p className="text-sm text-muted-foreground">
-                                {hotel?.name || 'Unknown Hotel'}
-                              </p>
+                      <div key={room._id} className="col-12 mb-3">
+                        <div className="card">
+                          <div className="card-body">
+                            <div className="d-flex justify-content-between">
+                              <div>
+                                <h3 className="card-title h5 mb-0">{room.title}</h3>
+                                <p className="text-muted small">{hotel?.name || 'Unknown Hotel'}</p>
+                              </div>
+                              <div>
+                                <button 
+                                  className={`btn btn-sm ${room.isCleaned ? 'btn-outline-danger' : 'btn-outline-success'} me-2`}
+                                  onClick={() => handleToggleRoomCleaned(room)}
+                                >
+                                  {room.isCleaned ? (
+                                    <>
+                                      <i className="bi bi-x-circle me-1"></i>
+                                      Needs Cleaning
+                                    </>
+                                  ) : (
+                                    <>
+                                      <i className="bi bi-check-circle me-1"></i>
+                                      Mark Clean
+                                    </>
+                                  )}
+                                </button>
+                                <button 
+                                  className="btn btn-sm btn-outline-primary me-2"
+                                  onClick={() => handleEditRoom(room)}
+                                >
+                                  <i className="bi bi-pencil"></i>
+                                </button>
+                                <button 
+                                  className="btn btn-sm btn-outline-danger"
+                                  onClick={() => handleDeleteRoom(room._id || '')}
+                                >
+                                  <i className="bi bi-trash"></i>
+                                </button>
+                              </div>
                             </div>
-                            <div className="flex space-x-2">
-                              <Button 
-                                variant={room.isCleaned ? "outline" : "default"}
-                                size="sm"
-                                onClick={() => handleToggleRoomCleaned(room)}
-                              >
-                                {room.isCleaned ? (
-                                  <>
-                                    <X className="h-4 w-4 mr-2" />
-                                    Needs Cleaning
-                                  </>
-                                ) : (
-                                  <>
-                                    <Check className="h-4 w-4 mr-2" />
-                                    Mark Clean
-                                  </>
-                                )}
-                              </Button>
-                              <Button 
-                                variant="outline" 
-                                size="sm"
-                                onClick={() => handleEditRoom(room)}
-                              >
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                              <Button 
-                                variant="destructive" 
-                                size="sm"
-                                onClick={() => handleDeleteRoom(room._id || '')}
-                              >
-                                <Trash className="h-4 w-4" />
-                              </Button>
+                            <div className="row mt-3 text-muted small">
+                              <div className="col-md-4 mb-2 mb-md-0">
+                                <strong>Room Numbers:</strong> {room.roomNumbers?.map(r => r.number).join(', ')}
+                              </div>
+                              <div className="col-md-4 mb-2 mb-md-0">
+                                <strong>Price:</strong> ${room.price} per night
+                              </div>
+                              <div className="col-md-4">
+                                <strong>Max People:</strong> {room.maxPeople}
+                              </div>
                             </div>
-                          </div>
-                          <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div>
-                              <span className="text-sm font-medium">Room Numbers: </span>
-                              <span className="text-sm">
-                                {room.roomNumbers?.map(r => r.number).join(', ')}
-                              </span>
+                            <div className="mt-2">
+                              <p className="text-muted small">{room.desc}</p>
                             </div>
-                            <div>
-                              <span className="text-sm font-medium">Price: </span>
-                              <span className="text-sm">${room.price} per night</span>
-                            </div>
-                            <div>
-                              <span className="text-sm font-medium">Max People: </span>
-                              <span className="text-sm">{room.maxPeople}</span>
-                            </div>
-                          </div>
-                          <div className="mt-2">
-                            <p className="text-sm text-gray-500">{room.desc}</p>
                           </div>
                         </div>
-                      </Card>
+                      </div>
                     );
                   })}
                   
                   {rooms.length === 0 && (
-                    <Card className="p-8 text-center">
-                      <p className="text-muted-foreground">No rooms found. Add a room to get started.</p>
-                    </Card>
+                    <div className="col-12">
+                      <div className="card py-5">
+                        <div className="card-body text-center">
+                          <p className="text-muted">No rooms found. Add a room to get started.</p>
+                        </div>
+                      </div>
+                    </div>
                   )}
                 </div>
-              </TabsContent>
+              </div>
               
-              <TabsContent value="bookings" className="space-y-6">
-                <div className="flex justify-between items-center mb-4">
-                  <h2 className="text-xl font-semibold">Bookings</h2>
+              <div className={`tab-pane fade ${activeTab === 'bookings' ? 'show active' : ''}`}>
+                <div className="d-flex justify-content-between align-items-center mb-4">
+                  <h2 className="h4 mb-0">Bookings</h2>
                 </div>
                 
-                <div className="grid grid-cols-1 gap-4">
+                <div className="row">
                   {bookings.map(booking => {
                     const hotel = hotels.find(h => h._id === booking.hotelId);
                     
                     return (
-                      <Card key={booking._id} className="overflow-hidden">
-                        <div className="p-4">
-                          <div className="flex justify-between items-start">
-                            <div>
-                              <h3 className="font-bold text-lg">Booking #{booking._id?.substring(0, 8)}...</h3>
-                              <p className="text-sm text-muted-foreground">
-                                Room {booking.roomNumber} at {hotel?.name || 'Unknown Hotel'}
-                              </p>
+                      <div key={booking._id} className="col-12 mb-3">
+                        <div className="card">
+                          <div className="card-body">
+                            <div className="d-flex justify-content-between">
+                              <div>
+                                <h3 className="card-title h5 mb-0">Booking #{booking._id?.substring(0, 8)}...</h3>
+                                <p className="text-muted small">
+                                  Room {booking.roomNumber} at {hotel?.name || 'Unknown Hotel'}
+                                </p>
+                              </div>
+                              <div>
+                                <button
+                                  className="btn btn-sm btn-outline-primary"
+                                  onClick={() => {
+                                    const newStatus = booking.status === 'active' || booking.status === 'confirmed' ? 'completed' : 'active';
+                                    bookingAPI.updateBooking(booking._id || '', { status: newStatus })
+                                      .then(updatedBooking => {
+                                        setBookings(bookings.map(b => b._id === booking._id ? updatedBooking : b));
+                                        toast.success(`Booking marked as ${newStatus}`);
+                                      })
+                                      .catch(error => {
+                                        console.error('Error updating booking:', error);
+                                        toast.error('Failed to update booking');
+                                      });
+                                  }}
+                                >
+                                  {booking.status === 'active' || booking.status === 'confirmed' ? 'Mark Completed' : 'Mark Active'}
+                                </button>
+                              </div>
                             </div>
-                            <div className="flex space-x-2">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => {
-                                  const newStatus = booking.status === 'active' || booking.status === 'confirmed' ? 'completed' : 'active';
-                                  bookingAPI.updateBooking(booking._id || '', { status: newStatus })
-                                    .then(updatedBooking => {
-                                      setBookings(bookings.map(b => b._id === booking._id ? updatedBooking : b));
-                                      toast.success(`Booking marked as ${newStatus}`);
-                                    })
-                                    .catch(error => {
-                                      console.error('Error updating booking:', error);
-                                      toast.error('Failed to update booking');
-                                    });
-                                }}
-                              >
-                                {booking.status === 'active' || booking.status === 'confirmed' ? 'Mark Completed' : 'Mark Active'}
-                              </Button>
-                            </div>
-                          </div>
-                          <div className="mt-4 grid grid-cols-1 md:grid-cols-4 gap-4">
-                            <div>
-                              <span className="text-sm font-medium">Check In: </span>
-                              <span className="text-sm">{new Date(booking.dateStart).toLocaleDateString()}</span>
-                            </div>
-                            <div>
-                              <span className="text-sm font-medium">Check Out: </span>
-                              <span className="text-sm">{new Date(booking.dateEnd).toLocaleDateString()}</span>
-                            </div>
-                            <div>
-                              <span className="text-sm font-medium">Price: </span>
-                              <span className="text-sm">${booking.totalPrice}</span>
-                            </div>
-                            <div>
-                              <span className="text-sm font-medium">Status: </span>
-                              <span className="text-sm capitalize">{booking.status}</span>
+                            <div className="row mt-3 text-muted small">
+                              <div className="col-md-3 mb-2 mb-md-0">
+                                <strong>Check In:</strong> {new Date(booking.dateStart).toLocaleDateString()}
+                              </div>
+                              <div className="col-md-3 mb-2 mb-md-0">
+                                <strong>Check Out:</strong> {new Date(booking.dateEnd).toLocaleDateString()}
+                              </div>
+                              <div className="col-md-3 mb-2 mb-md-0">
+                                <strong>Price:</strong> ${booking.totalPrice}
+                              </div>
+                              <div className="col-md-3">
+                                <strong>Status:</strong> <span className="text-capitalize">{booking.status}</span>
+                              </div>
                             </div>
                           </div>
                         </div>
-                      </Card>
+                      </div>
                     );
                   })}
                   
                   {bookings.length === 0 && (
-                    <Card className="p-8 text-center">
-                      <p className="text-muted-foreground">No bookings found.</p>
-                    </Card>
+                    <div className="col-12">
+                      <div className="card py-5">
+                        <div className="card-body text-center">
+                          <p className="text-muted">No bookings found.</p>
+                        </div>
+                      </div>
+                    </div>
                   )}
                 </div>
-              </TabsContent>
-            </Tabs>
+              </div>
+            </div>
           </div>
         </main>
         
         <Footer />
         
-        {/* Worker Dialog */}
-        <Dialog open={isWorkerDialogOpen} onOpenChange={setIsWorkerDialogOpen}>
-          <DialogContent className="sm:max-w-[500px]">
-            <DialogHeader>
-              <DialogTitle>
-                {selectedWorker ? 'Edit Worker' : 'Add New Worker'}
-              </DialogTitle>
-            </DialogHeader>
-            
-            <form onSubmit={handleSubmitWorkerForm} className="space-y-4 py-4">
-              <div className="grid grid-cols-1 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Name</Label>
-                  <Input
-                    id="name"
-                    name="name"
-                    value={workerFormData.name}
-                    onChange={handleWorkerInputChange}
-                    required
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="role">Role</Label>
-                  <select
-                    id="role"
-                    name="role"
-                    value={workerFormData.role}
-                    onChange={handleWorkerInputChange}
-                    required
-                    className="w-full rounded-md border border-input px-3 py-2 bg-background"
-                  >
-                    <option value="">Select Role</option>
-                    <option value="Housekeeper">Housekeeper</option>
-                    <option value="Receptionist">Receptionist</option>
-                    <option value="Manager">Manager</option>
-                    <option value="Maintenance">Maintenance</option>
-                    <option value="Security">Security</option>
-                  </select>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="hotelId">Hotel</Label>
-                  <select
-                    id="hotelId"
-                    name="hotelId"
-                    value={workerFormData.hotelId}
-                    onChange={handleWorkerInputChange}
-                    required
-                    className="w-full rounded-md border border-input px-3 py-2 bg-background"
-                  >
-                    {hotels.map(hotel => (
-                      <option key={hotel._id} value={hotel._id}>
-                        {hotel.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    name="email"
-                    type="email"
-                    value={workerFormData.email}
-                    onChange={handleWorkerInputChange}
-                    required
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="phone">Phone (optional)</Label>
-                  <Input
-                    id="phone"
-                    name="phone"
-                    value={workerFormData.phone}
-                    onChange={handleWorkerInputChange}
-                  />
-                </div>
-                
-                <div className="flex items-center space-x-2">
-                  <input
-                    id="isActive"
-                    name="isActive"
-                    type="checkbox"
-                    checked={workerFormData.isActive}
-                    onChange={handleWorkerInputChange}
-                    className="rounded"
-                  />
-                  <Label htmlFor="isActive">Active</Label>
-                </div>
+        {/* Worker Modal */}
+        <div className={`modal fade ${isWorkerDialogOpen ? 'show' : ''}`} style={{display: isWorkerDialogOpen ? 'block' : 'none'}} tabIndex="-1">
+          <div className="modal-dialog">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">{selectedWorker ? 'Edit Worker' : 'Add New Worker'}</h5>
+                <button type="button" className="btn-close" onClick={() => setIsWorkerDialogOpen(false)}></button>
               </div>
               
-              <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => setIsWorkerDialogOpen(false)}>
-                  Cancel
-                </Button>
-                <Button type="submit">
-                  {selectedWorker ? 'Update Worker' : 'Add Worker'}
-                </Button>
-              </DialogFooter>
-            </form>
-          </DialogContent>
-        </Dialog>
+              <form onSubmit={handleSubmitWorkerForm}>
+                <div className="modal-body">
+                  <div className="mb-3">
+                    <label htmlFor="name" className="form-label">Name</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      id="name"
+                      name="name"
+                      value={workerFormData.name}
+                      onChange={handleWorkerInputChange}
+                      required
+                    />
+                  </div>
+                  
+                  <div className="mb-3">
+                    <label htmlFor="role" className="form-label">Role</label>
+                    <select
+                      className="form-select"
+                      id="role"
+                      name="role"
+                      value={workerFormData.role}
+                      onChange={handleWorkerInputChange}
+                      required
+                    >
+                      <option value="">Select Role</option>
+                      <option value="Housekeeper">Housekeeper</option>
+                      <option value="Receptionist">Receptionist</option>
+                      <option value="Manager">Manager</option>
+                      <option value="Maintenance">Maintenance</option>
+                      <option value="Security">Security</option>
+                    </select>
+                  </div>
+                  
+                  <div className="mb-3">
+                    <label htmlFor="hotelId" className="form-label">Hotel</label>
+                    <select
+                      className="form-select"
+                      id="hotelId"
+                      name="hotelId"
+                      value={workerFormData.hotelId}
+                      onChange={handleWorkerInputChange}
+                      required
+                    >
+                      {hotels.map(hotel => (
+                        <option key={hotel._id} value={hotel._id}>
+                          {hotel.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  
+                  <div className="mb-3">
+                    <label htmlFor="email" className="form-label">Email</label>
+                    <input
+                      type="email"
+                      className="form-control"
+                      id="email"
+                      name="email"
+                      value={workerFormData.email}
+                      onChange={handleWorkerInputChange}
+                      required
+                    />
+                  </div>
+                  
+                  <div className="mb-3">
+                    <label htmlFor="phone" className="form-label">Phone (optional)</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      id="phone"
+                      name="phone"
+                      value={workerFormData.phone}
+                      onChange={handleWorkerInputChange}
+                    />
+                  </div>
+                  
+                  <div className="form-check mb-3">
+                    <input
+                      type="checkbox"
+                      className="form-check-input"
+                      id="isActive"
+                      name="isActive"
+                      checked={workerFormData.isActive}
+                      onChange={handleWorkerInputChange}
+                    />
+                    <label className="form-check-label" htmlFor="isActive">Active</label>
+                  </div>
+                </div>
+                
+                <div className="modal-footer">
+                  <button type="button" className="btn btn-secondary" onClick={() => setIsWorkerDialogOpen(false)}>
+                    Cancel
+                  </button>
+                  <button type="submit" className="btn btn-primary">
+                    {selectedWorker ? 'Update Worker' : 'Add Worker'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+          <div className="modal-backdrop fade show"></div>
+        </div>
         
-        {/* Room Dialog */}
-        <Dialog open={isRoomDialogOpen} onOpenChange={setIsRoomDialogOpen}>
-          <DialogContent className="sm:max-w-[500px]">
-            <DialogHeader>
-              <DialogTitle>
-                {selectedRoom ? 'Edit Room' : 'Add New Room'}
-              </DialogTitle>
-            </DialogHeader>
-            
-            <form onSubmit={handleSubmitRoomForm} className="space-y-4 py-4">
-              <div className="grid grid-cols-1 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="title">Room Title</Label>
-                  <Input
-                    id="title"
-                    name="title"
-                    value={roomFormData.title}
-                    onChange={handleRoomInputChange}
-                    required
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="hotelId">Hotel</Label>
-                  <select
-                    id="hotelId"
-                    name="hotelId"
-                    value={roomFormData.hotelId}
-                    onChange={handleRoomInputChange}
-                    required
-                    className="w-full rounded-md border border-input px-3 py-2 bg-background"
-                  >
-                    {hotels.map(hotel => (
-                      <option key={hotel._id} value={hotel._id}>
-                        {hotel.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="price">Price Per Night ($)</Label>
-                    <Input
-                      id="price"
-                      name="price"
-                      type="number"
-                      min="0"
-                      step="1"
-                      value={roomFormData.price}
-                      onChange={handleRoomInputChange}
-                      required
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="maxPeople">Max People</Label>
-                    <Input
-                      id="maxPeople"
-                      name="maxPeople"
-                      type="number"
-                      min="1"
-                      value={roomFormData.maxPeople}
-                      onChange={handleRoomInputChange}
-                      required
-                    />
-                  </div>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="desc">Description</Label>
-                  <textarea
-                    id="desc"
-                    name="desc"
-                    value={roomFormData.desc}
-                    onChange={handleRoomInputChange}
-                    required
-                    className="w-full rounded-md border border-input px-3 py-2 bg-background h-24"
-                  ></textarea>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label>Room Numbers</Label>
-                  <div className="flex space-x-2">
-                    <Input
-                      placeholder="Enter room number"
-                      value={roomNumberInput}
-                      onChange={(e) => setRoomNumberInput(e.target.value)}
-                    />
-                    <Button type="button" onClick={handleAddRoomNumber}>Add</Button>
-                  </div>
-                  
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    {roomFormData.roomNumbers.map(room => (
-                      <div key={room.number} className="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium">
-                        Room {room.number}
-                        <button 
-                          type="button"
-                          onClick={() => handleRemoveRoomNumber(room.number)}
-                          className="ml-1 text-gray-400 hover:text-gray-600"
-                        >
-                          ×
-                        </button>
-                      </div>
-                    ))}
-                    
-                    {roomFormData.roomNumbers.length === 0 && (
-                      <p className="text-sm text-muted-foreground">No room numbers added yet</p>
-                    )}
-                  </div>
-                </div>
+        {/* Room Modal */}
+        <div className={`modal fade ${isRoomDialogOpen ? 'show' : ''}`} style={{display: isRoomDialogOpen ? 'block' : 'none'}} tabIndex="-1">
+          <div className="modal-dialog">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">{selectedRoom ? 'Edit Room' : 'Add New Room'}</h5>
+                <button type="button" className="btn-close" onClick={() => setIsRoomDialogOpen(false)}></button>
               </div>
               
-              <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => setIsRoomDialogOpen(false)}>
-                  Cancel
-                </Button>
-                <Button type="submit">
-                  {selectedRoom ? 'Update Room' : 'Add Room'}
-                </Button>
-              </DialogFooter>
-            </form>
-          </DialogContent>
-        </Dialog>
+              <form onSubmit={handleSubmitRoomForm}>
+                <div className="modal-body">
+                  <div className="mb-3">
+                    <label htmlFor="title" className="form-label">Room Title</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      id="title"
+                      name="title"
+                      value={roomFormData.title}
+                      onChange={handleRoomInputChange}
+                      required
+                    />
+                  </div>
+                  
+                  <div className="mb-3">
+                    <label htmlFor="hotelId" className="form-label">Hotel</label>
+                    <select
+                      className="form-select"
+                      id="hotelId"
+                      name="hotelId"
+                      value={roomFormData.hotelId}
+                      onChange={handleRoomInputChange}
+                      required
+                    >
+                      {hotels.map(hotel => (
+                        <option key={hotel._id} value={hotel._id}>
+                          {hotel.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  
+                  <div className="row mb-3">
+                    <div className="col-md-6">
+                      <label htmlFor="price" className="form-label">Price Per Night ($)</label>
+                      <input
+                        type="number"
+                        className="form-control"
+                        id="price"
+                        name="price"
+                        min="0"
+                        step="1"
+                        value={roomFormData.price}
+                        onChange={handleRoomInputChange}
+                        required
+                      />
+                    </div>
+                    
+                    <div className="col-md-6">
+                      <label htmlFor="maxPeople" className="form-label">Max People</label>
+                      <input
+                        type="number"
+                        className="form-control"
+                        id="maxPeople"
+                        name="maxPeople"
+                        min="1"
+                        value={roomFormData.maxPeople}
+                        onChange={handleRoomInputChange}
+                        required
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="mb-3">
+                    <label htmlFor="desc" className="form-label">Description</label>
+                    <textarea
+                      className="form-control"
+                      id="desc"
+                      name="desc"
+                      rows="3"
+                      value={roomFormData.desc}
+                      onChange={handleRoomInputChange}
+                      required
+                    ></textarea>
+                  </div>
+                  
+                  <div className="mb-3">
+                    <label className="form-label">Room Numbers</label>
+                    <div className="input-group mb-2">
+                      <input
+                        type="text"
+                        className="form-control"
+                        placeholder="Enter room number"
+                        value={roomNumberInput}
+                        onChange={(e) => setRoomNumberInput(e.target.value)}
+                      />
+                      <button 
+                        type="button" 
+                        className="btn btn-outline-primary"
+                        onClick={handleAddRoomNumber}
+                      >
+                        Add
+                      </button>
+                    </div>
+                    
+                    <div className="d-flex flex-wrap gap-2 mt-2">
+                      {roomFormData.roomNumbers.map(room => (
+                        <span key={room.number} className="badge bg-light text-dark py-2 px-3">
+                          Room {room.number}
+                          <button 
+                            type="button"
+                            className="btn-close ms-1"
+                            style={{ fontSize: '0.5rem' }}
+                            onClick={() => handleRemoveRoomNumber(room.number)}
+                          ></button>
+                        </span>
+                      ))}
+                      
+                      {roomFormData.roomNumbers.length === 0 && (
+                        <p className="text-muted small">No room numbers added yet</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="modal-footer">
+                  <button type="button" className="btn btn-secondary" onClick={() => setIsRoomDialogOpen(false)}>
+                    Cancel
+                  </button>
+                  <button type="submit" className="btn btn-primary">
+                    {selectedRoom ? 'Update Room' : 'Add Room'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+          <div className="modal-backdrop fade show"></div>
+        </div>
       </div>
     </AuthGuard>
   );
