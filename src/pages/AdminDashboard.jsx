@@ -2,37 +2,12 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { Navigate } from 'react-router-dom';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Button } from '@/components/ui/button';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import { Loader2, Plus, PenSquare, Trash2, UserPlus, ShieldCheck, Hotel } from 'lucide-react';
-import AdminBookings from './admin/AdminBookings';
-import AdminUsers from './admin/AdminUsers';
+import { Container, Row, Col, Nav, Tab, Button, Spinner, Table, Form, Modal } from 'react-bootstrap';
 import { hotelAPI, moderatorAPI, userAPI } from '@/services/api';
 import AuthGuard from '@/components/AuthGuard';
 import { toast } from 'sonner';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
-import {
-  Table,
-  TableBody,
-  TableCaption,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 
 const AdminDashboard = () => {
   const { state } = useAuth();
@@ -45,10 +20,10 @@ const AdminDashboard = () => {
   const [hotels, setHotels] = useState([]);
   const [loadingData, setLoadingData] = useState(true);
   
-  // Dialog states
-  const [userDialogOpen, setUserDialogOpen] = useState(false);
-  const [moderatorDialogOpen, setModeratorDialogOpen] = useState(false);
-  const [hotelDialogOpen, setHotelDialogOpen] = useState(false);
+  // Modal states
+  const [userModalShow, setUserModalShow] = useState(false);
+  const [moderatorModalShow, setModeratorModalShow] = useState(false);
+  const [hotelModalShow, setHotelModalShow] = useState(false);
   
   // Form states
   const [userForm, setUserForm] = useState({
@@ -100,12 +75,12 @@ const AdminDashboard = () => {
           setUsers(usersData);
         }
         
-        if (activeTab === 'moderators') {
+        if (activeTab === 'moderators' || activeTab === 'hotels') {
           const moderatorsData = await moderatorAPI.getAllModerators();
           setModerators(moderatorsData);
         }
         
-        if (activeTab === 'hotels') {
+        if (activeTab === 'hotels' || activeTab === 'moderators') {
           const hotelsData = await hotelAPI.getAllHotels();
           setHotels(hotelsData);
         }
@@ -178,7 +153,7 @@ const AdminDashboard = () => {
         toast.success('User created successfully');
       }
       
-      setUserDialogOpen(false);
+      setUserModalShow(false);
       setEditingUserId(null);
       setUserForm({
         username: '',
@@ -213,7 +188,7 @@ const AdminDashboard = () => {
         toast.success('Moderator created successfully');
       }
       
-      setModeratorDialogOpen(false);
+      setModeratorModalShow(false);
       setEditingModeratorId(null);
       setModeratorForm({
         userId: '',
@@ -247,7 +222,7 @@ const AdminDashboard = () => {
         toast.success('Hotel created successfully');
       }
       
-      setHotelDialogOpen(false);
+      setHotelModalShow(false);
       setEditingHotelId(null);
       setHotelForm({
         name: '',
@@ -280,7 +255,7 @@ const AdminDashboard = () => {
     });
     
     setEditingUserId(userData._id);
-    setUserDialogOpen(true);
+    setUserModalShow(true);
   };
 
   // Edit moderator
@@ -296,7 +271,7 @@ const AdminDashboard = () => {
     });
     
     setEditingModeratorId(moderatorData._id);
-    setModeratorDialogOpen(true);
+    setModeratorModalShow(true);
   };
 
   // Edit hotel
@@ -314,7 +289,7 @@ const AdminDashboard = () => {
     });
     
     setEditingHotelId(hotelData._id);
-    setHotelDialogOpen(true);
+    setHotelModalShow(true);
   };
 
   // Delete user
@@ -355,740 +330,627 @@ const AdminDashboard = () => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-screen">
-        <Loader2 className="h-10 w-10 animate-spin text-hotel-500" />
+      <div className="d-flex justify-content-center align-items-center vh-100">
+        <Spinner animation="border" variant="primary" />
       </div>
     );
   }
 
   return (
     <AuthGuard requireAdmin={true}>
-      <div className="flex flex-col min-h-screen">
+      <div className="d-flex flex-column min-vh-100">
         <Navbar />
         
-        <main className="flex-grow pt-16 md:pt-20 pb-10">
-          <div className="container-custom">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
+        <main className="flex-grow-1 py-5 bg-light">
+          <Container>
+            <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4">
               <div>
-                <h1 className="text-3xl font-bold mb-2">Admin Dashboard</h1>
-                <p className="text-muted-foreground">Manage all aspects of your hotel system.</p>
+                <h1 className="mb-2">Admin Dashboard</h1>
+                <p className="text-muted">Manage all aspects of your hotel system.</p>
               </div>
               
-              <div className="flex space-x-2 mt-4 md:mt-0">
-                <Button variant="outline">Export Data</Button>
-                <Button className="bg-hotel-500 hover:bg-hotel-600">System Settings</Button>
+              <div className="d-flex mt-3 mt-md-0">
+                <Button variant="outline-primary" className="me-2">Export Data</Button>
+                <Button variant="primary">System Settings</Button>
               </div>
             </div>
             
-            <Tabs 
-              defaultValue={activeTab} 
-              value={activeTab}
-              onValueChange={setActiveTab}
-              className="mt-6"
-            >
-              <TabsList className="grid grid-cols-3 md:grid-cols-5 mb-8">
-                <TabsTrigger value="users">Users</TabsTrigger>
-                <TabsTrigger value="hotels">Hotels</TabsTrigger>
-                <TabsTrigger value="rooms">Rooms</TabsTrigger>
-                <TabsTrigger value="bookings">Bookings</TabsTrigger>
-                <TabsTrigger value="moderators">Moderators</TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="users" className="space-y-4">
-                <div className="flex justify-between items-center mb-4">
-                  <h2 className="text-xl font-semibold">User Management</h2>
-                  <Button 
-                    onClick={() => {
-                      setEditingUserId(null);
-                      setUserForm({
-                        username: '',
-                        email: '',
-                        password: '',
-                        country: '',
-                        city: '',
-                        phone: '',
-                        isAdmin: false,
-                        isModerator: false
-                      });
-                      setUserDialogOpen(true);
-                    }}
-                    className="bg-hotel-500 hover:bg-hotel-600"
-                  >
-                    <UserPlus className="h-4 w-4 mr-2" />
-                    Add User
-                  </Button>
-                </div>
-                
-                {loadingData ? (
-                  <div className="flex justify-center items-center py-12">
-                    <Loader2 className="h-8 w-8 animate-spin text-hotel-500" />
-                    <span className="ml-2">Loading users...</span>
+            <Tab.Container id="admin-tabs" activeKey={activeTab} onSelect={setActiveTab}>
+              <Nav variant="tabs" className="mb-4">
+                <Nav.Item>
+                  <Nav.Link eventKey="users">Users</Nav.Link>
+                </Nav.Item>
+                <Nav.Item>
+                  <Nav.Link eventKey="hotels">Hotels</Nav.Link>
+                </Nav.Item>
+                <Nav.Item>
+                  <Nav.Link eventKey="rooms">Rooms</Nav.Link>
+                </Nav.Item>
+                <Nav.Item>
+                  <Nav.Link eventKey="bookings">Bookings</Nav.Link>
+                </Nav.Item>
+                <Nav.Item>
+                  <Nav.Link eventKey="moderators">Moderators</Nav.Link>
+                </Nav.Item>
+              </Nav>
+              <Tab.Content>
+                <Tab.Pane eventKey="users">
+                  <div className="d-flex justify-content-between align-items-center mb-4">
+                    <h2>User Management</h2>
+                    <Button 
+                      variant="primary"
+                      onClick={() => {
+                        setEditingUserId(null);
+                        setUserForm({
+                          username: '',
+                          email: '',
+                          password: '',
+                          country: '',
+                          city: '',
+                          phone: '',
+                          isAdmin: false,
+                          isModerator: false
+                        });
+                        setUserModalShow(true);
+                      }}
+                    >
+                      <i className="bi bi-person-plus me-2"></i>
+                      Add User
+                    </Button>
                   </div>
-                ) : (
-                  <div className="bg-white rounded-md shadow-sm overflow-hidden">
-                    <Table>
-                      <TableCaption>List of all users in the system</TableCaption>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Username</TableHead>
-                          <TableHead>Email</TableHead>
-                          <TableHead>Location</TableHead>
-                          <TableHead>Role</TableHead>
-                          <TableHead className="text-right">Actions</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {users.map((user) => (
-                          <TableRow key={user._id}>
-                            <TableCell className="font-medium">{user.username}</TableCell>
-                            <TableCell>{user.email}</TableCell>
-                            <TableCell>{user.city}, {user.country}</TableCell>
-                            <TableCell>
-                              {user.isAdmin ? (
-                                <span className="bg-red-100 text-red-800 text-xs px-2 py-1 rounded-full">
-                                  Admin
-                                </span>
-                              ) : user.isModerator ? (
-                                <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
-                                  Moderator
-                                </span>
-                              ) : (
-                                <span className="bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded-full">
-                                  User
-                                </span>
-                              )}
-                            </TableCell>
-                            <TableCell className="text-right">
-                              <div className="flex justify-end space-x-2">
+                  
+                  {loadingData ? (
+                    <div className="d-flex justify-content-center align-items-center py-5">
+                      <Spinner animation="border" variant="primary" size="sm" className="me-2" />
+                      <span>Loading users...</span>
+                    </div>
+                  ) : (
+                    <div className="bg-white rounded shadow-sm">
+                      <Table hover responsive>
+                        <thead className="table-light">
+                          <tr>
+                            <th>Username</th>
+                            <th>Email</th>
+                            <th>Location</th>
+                            <th>Role</th>
+                            <th className="text-end">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {users.map((user) => (
+                            <tr key={user._id}>
+                              <td className="align-middle">{user.username}</td>
+                              <td className="align-middle">{user.email}</td>
+                              <td className="align-middle">{user.city}, {user.country}</td>
+                              <td className="align-middle">
+                                {user.isAdmin ? (
+                                  <span className="badge bg-danger">Admin</span>
+                                ) : user.isModerator ? (
+                                  <span className="badge bg-info">Moderator</span>
+                                ) : (
+                                  <span className="badge bg-secondary">User</span>
+                                )}
+                              </td>
+                              <td className="text-end">
                                 <Button 
-                                  variant="ghost" 
-                                  size="icon"
+                                  variant="link" 
+                                  className="p-1 text-primary"
                                   onClick={() => handleEditUser(user)}
                                 >
-                                  <PenSquare className="h-4 w-4" />
+                                  <i className="bi bi-pencil-square"></i>
                                 </Button>
                                 <Button 
-                                  variant="ghost" 
-                                  size="icon"
-                                  className="text-red-500 hover:text-red-700"
+                                  variant="link" 
+                                  className="p-1 text-danger"
                                   onClick={() => handleDeleteUser(user._id)}
                                 >
-                                  <Trash2 className="h-4 w-4" />
+                                  <i className="bi bi-trash"></i>
                                 </Button>
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
-                )}
-              </TabsContent>
-              
-              <TabsContent value="hotels" className="space-y-4">
-                <div className="flex justify-between items-center mb-4">
-                  <h2 className="text-xl font-semibold">Hotel Management</h2>
-                  <Button 
-                    onClick={() => {
-                      setEditingHotelId(null);
-                      setHotelForm({
-                        name: '',
-                        type: 'Hotel',
-                        city: '',
-                        address: '',
-                        distance: '',
-                        title: '',
-                        desc: '',
-                        cheapestPrice: 0,
-                        featured: false
-                      });
-                      setHotelDialogOpen(true);
-                    }}
-                    className="bg-hotel-500 hover:bg-hotel-600"
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Hotel
-                  </Button>
-                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </Table>
+                    </div>
+                  )}
+                </Tab.Pane>
                 
-                {loadingData ? (
-                  <div className="flex justify-center items-center py-12">
-                    <Loader2 className="h-8 w-8 animate-spin text-hotel-500" />
-                    <span className="ml-2">Loading hotels...</span>
+                <Tab.Pane eventKey="hotels">
+                  <div className="d-flex justify-content-between align-items-center mb-4">
+                    <h2>Hotel Management</h2>
+                    <Button 
+                      variant="primary"
+                      onClick={() => {
+                        setEditingHotelId(null);
+                        setHotelForm({
+                          name: '',
+                          type: 'Hotel',
+                          city: '',
+                          address: '',
+                          distance: '',
+                          title: '',
+                          desc: '',
+                          cheapestPrice: 0,
+                          featured: false
+                        });
+                        setHotelModalShow(true);
+                      }}
+                    >
+                      <i className="bi bi-plus-lg me-2"></i>
+                      Add Hotel
+                    </Button>
                   </div>
-                ) : (
-                  <div className="bg-white rounded-md shadow-sm overflow-hidden">
-                    <Table>
-                      <TableCaption>List of all hotels in the system</TableCaption>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Name</TableHead>
-                          <TableHead>Type</TableHead>
-                          <TableHead>Location</TableHead>
-                          <TableHead>Price</TableHead>
-                          <TableHead>Rating</TableHead>
-                          <TableHead className="text-right">Actions</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {hotels.map((hotel) => (
-                          <TableRow key={hotel._id}>
-                            <TableCell className="font-medium">{hotel.name}</TableCell>
-                            <TableCell>{hotel.type}</TableCell>
-                            <TableCell>{hotel.city}</TableCell>
-                            <TableCell>${hotel.cheapestPrice}</TableCell>
-                            <TableCell>{hotel.rating}/5</TableCell>
-                            <TableCell className="text-right">
-                              <div className="flex justify-end space-x-2">
+                  
+                  {loadingData ? (
+                    <div className="d-flex justify-content-center align-items-center py-5">
+                      <Spinner animation="border" variant="primary" size="sm" className="me-2" />
+                      <span>Loading hotels...</span>
+                    </div>
+                  ) : (
+                    <div className="bg-white rounded shadow-sm">
+                      <Table hover responsive>
+                        <thead className="table-light">
+                          <tr>
+                            <th>Name</th>
+                            <th>Type</th>
+                            <th>Location</th>
+                            <th>Price</th>
+                            <th>Rating</th>
+                            <th className="text-end">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {hotels.map((hotel) => (
+                            <tr key={hotel._id}>
+                              <td className="align-middle">{hotel.name}</td>
+                              <td className="align-middle">{hotel.type}</td>
+                              <td className="align-middle">{hotel.city}</td>
+                              <td className="align-middle">${hotel.cheapestPrice}</td>
+                              <td className="align-middle">{hotel.rating}/5</td>
+                              <td className="text-end">
                                 <Button 
-                                  variant="ghost" 
-                                  size="icon"
+                                  variant="link" 
+                                  className="p-1 text-primary"
                                   onClick={() => handleEditHotel(hotel)}
                                 >
-                                  <PenSquare className="h-4 w-4" />
+                                  <i className="bi bi-pencil-square"></i>
                                 </Button>
                                 <Button 
-                                  variant="ghost" 
-                                  size="icon"
-                                  className="text-red-500 hover:text-red-700"
+                                  variant="link" 
+                                  className="p-1 text-danger"
                                   onClick={() => handleDeleteHotel(hotel._id)}
                                 >
-                                  <Trash2 className="h-4 w-4" />
+                                  <i className="bi bi-trash"></i>
                                 </Button>
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
-                )}
-              </TabsContent>
-              
-              <TabsContent value="rooms" className="space-y-4">
-                <div className="grid">
-                  <h2 className="text-xl font-semibold mb-4">Room Management</h2>
-                  <p>Room management interface will be implemented here.</p>
-                </div>
-              </TabsContent>
-              
-              <TabsContent value="bookings" className="space-y-4">
-                <AdminBookings />
-              </TabsContent>
-              
-              <TabsContent value="moderators" className="space-y-4">
-                <div className="flex justify-between items-center mb-4">
-                  <h2 className="text-xl font-semibold">Moderator Management</h2>
-                  <Button 
-                    onClick={() => {
-                      setEditingModeratorId(null);
-                      setModeratorForm({
-                        userId: '',
-                        hotelId: '',
-                        permissions: {
-                          canManageWorkers: true,
-                          canManageRooms: true,
-                          canViewBookings: true
-                        }
-                      });
-                      setModeratorDialogOpen(true);
-                    }}
-                    className="bg-hotel-500 hover:bg-hotel-600"
-                  >
-                    <ShieldCheck className="h-4 w-4 mr-2" />
-                    Add Moderator
-                  </Button>
-                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </Table>
+                    </div>
+                  )}
+                </Tab.Pane>
                 
-                {loadingData ? (
-                  <div className="flex justify-center items-center py-12">
-                    <Loader2 className="h-8 w-8 animate-spin text-hotel-500" />
-                    <span className="ml-2">Loading moderators...</span>
+                <Tab.Pane eventKey="rooms">
+                  <div className="py-5 text-center">
+                    <h2 className="mb-4">Room Management</h2>
+                    <p>Room management interface will be implemented here.</p>
                   </div>
-                ) : (
-                  <div className="bg-white rounded-md shadow-sm overflow-hidden">
-                    <Table>
-                      <TableCaption>List of all moderators in the system</TableCaption>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>User</TableHead>
-                          <TableHead>Assigned Hotel</TableHead>
-                          <TableHead>Status</TableHead>
-                          <TableHead>Permissions</TableHead>
-                          <TableHead className="text-right">Actions</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {moderators.map((moderator) => {
-                          const assignedHotel = hotels.find(h => h._id === moderator.hotelId);
-                          const modUser = users.find(u => u._id === moderator.userId);
-                          
-                          return (
-                            <TableRow key={moderator._id}>
-                              <TableCell className="font-medium">
-                                {modUser ? modUser.username : moderator.userId}
-                              </TableCell>
-                              <TableCell>
-                                {assignedHotel ? assignedHotel.name : moderator.hotelId}
-                              </TableCell>
-                              <TableCell>
-                                {moderator.isActive ? (
-                                  <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">
-                                    Active
-                                  </span>
-                                ) : (
-                                  <span className="bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded-full">
-                                    Inactive
-                                  </span>
-                                )}
-                              </TableCell>
-                              <TableCell>
-                                <div className="flex flex-wrap gap-1">
-                                  {moderator.permissions?.canManageWorkers && (
-                                    <span className="bg-blue-50 text-blue-700 text-xs px-2 py-0.5 rounded">
-                                      Workers
-                                    </span>
+                </Tab.Pane>
+                
+                <Tab.Pane eventKey="bookings">
+                  <div className="py-5 text-center">
+                    <h2 className="mb-4">Booking Management</h2>
+                    <p>Booking management interface will be implemented here.</p>
+                  </div>
+                </Tab.Pane>
+                
+                <Tab.Pane eventKey="moderators">
+                  <div className="d-flex justify-content-between align-items-center mb-4">
+                    <h2>Moderator Management</h2>
+                    <Button 
+                      variant="primary"
+                      onClick={() => {
+                        setEditingModeratorId(null);
+                        setModeratorForm({
+                          userId: '',
+                          hotelId: '',
+                          permissions: {
+                            canManageWorkers: true,
+                            canManageRooms: true,
+                            canViewBookings: true
+                          }
+                        });
+                        setModeratorModalShow(true);
+                      }}
+                    >
+                      <i className="bi bi-shield-check me-2"></i>
+                      Add Moderator
+                    </Button>
+                  </div>
+                  
+                  {loadingData ? (
+                    <div className="d-flex justify-content-center align-items-center py-5">
+                      <Spinner animation="border" variant="primary" size="sm" className="me-2" />
+                      <span>Loading moderators...</span>
+                    </div>
+                  ) : (
+                    <div className="bg-white rounded shadow-sm">
+                      <Table hover responsive>
+                        <thead className="table-light">
+                          <tr>
+                            <th>User</th>
+                            <th>Assigned Hotel</th>
+                            <th>Status</th>
+                            <th>Permissions</th>
+                            <th className="text-end">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {moderators.map((moderator) => {
+                            const assignedHotel = hotels.find(h => h._id === moderator.hotelId);
+                            const modUser = users.find(u => u._id === moderator.userId);
+                            
+                            return (
+                              <tr key={moderator._id}>
+                                <td className="align-middle">
+                                  {modUser ? modUser.username : moderator.userId}
+                                </td>
+                                <td className="align-middle">
+                                  {assignedHotel ? assignedHotel.name : moderator.hotelId}
+                                </td>
+                                <td className="align-middle">
+                                  {moderator.isActive ? (
+                                    <span className="badge bg-success">Active</span>
+                                  ) : (
+                                    <span className="badge bg-secondary">Inactive</span>
                                   )}
-                                  {moderator.permissions?.canManageRooms && (
-                                    <span className="bg-purple-50 text-purple-700 text-xs px-2 py-0.5 rounded">
-                                      Rooms
-                                    </span>
-                                  )}
-                                  {moderator.permissions?.canViewBookings && (
-                                    <span className="bg-amber-50 text-amber-700 text-xs px-2 py-0.5 rounded">
-                                      Bookings
-                                    </span>
-                                  )}
-                                </div>
-                              </TableCell>
-                              <TableCell className="text-right">
-                                <div className="flex justify-end space-x-2">
+                                </td>
+                                <td className="align-middle">
+                                  <div className="d-flex flex-wrap gap-1">
+                                    {moderator.permissions?.canManageWorkers && (
+                                      <span className="badge bg-info">Workers</span>
+                                    )}
+                                    {moderator.permissions?.canManageRooms && (
+                                      <span className="badge bg-primary">Rooms</span>
+                                    )}
+                                    {moderator.permissions?.canViewBookings && (
+                                      <span className="badge bg-warning">Bookings</span>
+                                    )}
+                                  </div>
+                                </td>
+                                <td className="text-end">
                                   <Button 
-                                    variant="ghost" 
-                                    size="icon"
+                                    variant="link" 
+                                    className="p-1 text-primary"
                                     onClick={() => handleEditModerator(moderator)}
                                   >
-                                    <PenSquare className="h-4 w-4" />
+                                    <i className="bi bi-pencil-square"></i>
                                   </Button>
                                   <Button 
-                                    variant="ghost" 
-                                    size="icon"
-                                    className="text-red-500 hover:text-red-700"
+                                    variant="link" 
+                                    className="p-1 text-danger"
                                     onClick={() => handleDeleteModerator(moderator._id)}
                                   >
-                                    <Trash2 className="h-4 w-4" />
+                                    <i className="bi bi-trash"></i>
                                   </Button>
-                                </div>
-                              </TableCell>
-                            </TableRow>
-                          );
-                        })}
-                      </TableBody>
-                    </Table>
-                  </div>
-                )}
-              </TabsContent>
-            </Tabs>
-          </div>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </Table>
+                    </div>
+                  )}
+                </Tab.Pane>
+              </Tab.Content>
+            </Tab.Container>
+          </Container>
         </main>
         
         <Footer />
         
-        {/* User Dialog */}
-        <Dialog open={userDialogOpen} onOpenChange={setUserDialogOpen}>
-          <DialogContent className="sm:max-w-[425px]">
-            <DialogHeader>
-              <DialogTitle>{editingUserId ? 'Edit User' : 'Add New User'}</DialogTitle>
-              <DialogDescription>
-                {editingUserId ? 'Update user details' : 'Create a new user account'}
-              </DialogDescription>
-            </DialogHeader>
-            <form onSubmit={handleUserSubmit}>
-              <div className="grid gap-4 py-4">
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="username" className="text-right">
-                    Username
-                  </Label>
-                  <Input
-                    id="username"
-                    name="username"
-                    value={userForm.username}
+        {/* User Modal */}
+        <Modal show={userModalShow} onHide={() => setUserModalShow(false)}>
+          <Modal.Header closeButton>
+            <Modal.Title>{editingUserId ? 'Edit User' : 'Add New User'}</Modal.Title>
+          </Modal.Header>
+          <Form onSubmit={handleUserSubmit}>
+            <Modal.Body>
+              <Form.Group className="mb-3">
+                <Form.Label>Username</Form.Label>
+                <Form.Control
+                  name="username"
+                  value={userForm.username}
+                  onChange={handleUserFormChange}
+                  required
+                />
+              </Form.Group>
+              
+              <Form.Group className="mb-3">
+                <Form.Label>Email</Form.Label>
+                <Form.Control
+                  name="email"
+                  type="email"
+                  value={userForm.email}
+                  onChange={handleUserFormChange}
+                  required
+                />
+              </Form.Group>
+              
+              {!editingUserId && (
+                <Form.Group className="mb-3">
+                  <Form.Label>Password</Form.Label>
+                  <Form.Control
+                    name="password"
+                    type="password"
+                    value={userForm.password}
                     onChange={handleUserFormChange}
-                    className="col-span-3"
-                    required
+                    required={!editingUserId}
+                  />
+                </Form.Group>
+              )}
+              
+              <Form.Group className="mb-3">
+                <Form.Label>Country</Form.Label>
+                <Form.Control
+                  name="country"
+                  value={userForm.country}
+                  onChange={handleUserFormChange}
+                  required
+                />
+              </Form.Group>
+              
+              <Form.Group className="mb-3">
+                <Form.Label>City</Form.Label>
+                <Form.Control
+                  name="city"
+                  value={userForm.city}
+                  onChange={handleUserFormChange}
+                  required
+                />
+              </Form.Group>
+              
+              <Form.Group className="mb-3">
+                <Form.Label>Phone</Form.Label>
+                <Form.Control
+                  name="phone"
+                  type="tel"
+                  value={userForm.phone}
+                  onChange={handleUserFormChange}
+                />
+              </Form.Group>
+              
+              <Form.Group className="mb-3">
+                <Form.Label>Roles</Form.Label>
+                <div>
+                  <Form.Check
+                    type="checkbox"
+                    label="Admin"
+                    name="isAdmin"
+                    checked={userForm.isAdmin}
+                    onChange={handleUserFormChange}
+                    className="mb-2"
+                  />
+                  <Form.Check
+                    type="checkbox"
+                    label="Moderator"
+                    name="isModerator"
+                    checked={userForm.isModerator}
+                    onChange={handleUserFormChange}
                   />
                 </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="email" className="text-right">
-                    Email
-                  </Label>
-                  <Input
-                    id="email"
-                    name="email"
-                    type="email"
-                    value={userForm.email}
-                    onChange={handleUserFormChange}
-                    className="col-span-3"
-                    required
-                  />
-                </div>
-                {!editingUserId && (
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="password" className="text-right">
-                      Password
-                    </Label>
-                    <Input
-                      id="password"
-                      name="password"
-                      type="password"
-                      value={userForm.password}
-                      onChange={handleUserFormChange}
-                      className="col-span-3"
-                      required={!editingUserId}
-                    />
-                  </div>
-                )}
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="country" className="text-right">
-                    Country
-                  </Label>
-                  <Input
-                    id="country"
-                    name="country"
-                    value={userForm.country}
-                    onChange={handleUserFormChange}
-                    className="col-span-3"
-                    required
-                  />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="city" className="text-right">
-                    City
-                  </Label>
-                  <Input
-                    id="city"
-                    name="city"
-                    value={userForm.city}
-                    onChange={handleUserFormChange}
-                    className="col-span-3"
-                    required
-                  />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="phone" className="text-right">
-                    Phone
-                  </Label>
-                  <Input
-                    id="phone"
-                    name="phone"
-                    type="tel"
-                    value={userForm.phone}
-                    onChange={handleUserFormChange}
-                    className="col-span-3"
-                  />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <div className="text-right">Roles</div>
-                  <div className="col-span-3 space-y-2">
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id="isAdmin"
-                        name="isAdmin"
-                        checked={userForm.isAdmin}
-                        onCheckedChange={(checked) => 
-                          setUserForm({...userForm, isAdmin: checked})
-                        }
-                      />
-                      <Label htmlFor="isAdmin">Admin</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id="isModerator"
-                        name="isModerator"
-                        checked={userForm.isModerator}
-                        onCheckedChange={(checked) => 
-                          setUserForm({...userForm, isModerator: checked})
-                        }
-                      />
-                      <Label htmlFor="isModerator">Moderator</Label>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <DialogFooter>
-                <Button type="submit" className="bg-hotel-500 hover:bg-hotel-600">
-                  {editingUserId ? 'Update User' : 'Add User'}
-                </Button>
-              </DialogFooter>
-            </form>
-          </DialogContent>
-        </Dialog>
+              </Form.Group>
+            </Modal.Body>
+            <Modal.Footer>
+              <Button variant="secondary" onClick={() => setUserModalShow(false)}>
+                Cancel
+              </Button>
+              <Button variant="primary" type="submit">
+                {editingUserId ? 'Update User' : 'Add User'}
+              </Button>
+            </Modal.Footer>
+          </Form>
+        </Modal>
         
-        {/* Moderator Dialog */}
-        <Dialog open={moderatorDialogOpen} onOpenChange={setModeratorDialogOpen}>
-          <DialogContent className="sm:max-w-[425px]">
-            <DialogHeader>
-              <DialogTitle>{editingModeratorId ? 'Edit Moderator' : 'Add New Moderator'}</DialogTitle>
-              <DialogDescription>
-                {editingModeratorId ? 'Update moderator details' : 'Assign a user as a moderator for a hotel'}
-              </DialogDescription>
-            </DialogHeader>
-            <form onSubmit={handleModeratorSubmit}>
-              <div className="grid gap-4 py-4">
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="userId" className="text-right">
-                    User
-                  </Label>
-                  <select
-                    id="userId"
-                    name="userId"
-                    value={moderatorForm.userId}
+        {/* Moderator Modal */}
+        <Modal show={moderatorModalShow} onHide={() => setModeratorModalShow(false)}>
+          <Modal.Header closeButton>
+            <Modal.Title>{editingModeratorId ? 'Edit Moderator' : 'Add New Moderator'}</Modal.Title>
+          </Modal.Header>
+          <Form onSubmit={handleModeratorSubmit}>
+            <Modal.Body>
+              <Form.Group className="mb-3">
+                <Form.Label>User</Form.Label>
+                <Form.Select
+                  name="userId"
+                  value={moderatorForm.userId}
+                  onChange={handleModeratorFormChange}
+                  required
+                >
+                  <option value="">Select a user</option>
+                  {users.map((user) => (
+                    <option key={user._id} value={user._id}>
+                      {user.username} ({user.email})
+                    </option>
+                  ))}
+                </Form.Select>
+              </Form.Group>
+              
+              <Form.Group className="mb-3">
+                <Form.Label>Hotel</Form.Label>
+                <Form.Select
+                  name="hotelId"
+                  value={moderatorForm.hotelId}
+                  onChange={handleModeratorFormChange}
+                  required
+                >
+                  <option value="">Select a hotel</option>
+                  {hotels.map((hotel) => (
+                    <option key={hotel._id} value={hotel._id}>
+                      {hotel.name} ({hotel.city})
+                    </option>
+                  ))}
+                </Form.Select>
+              </Form.Group>
+              
+              <Form.Group className="mb-3">
+                <Form.Label>Permissions</Form.Label>
+                <div>
+                  <Form.Check
+                    type="checkbox"
+                    label="Manage Workers"
+                    name="permissions.canManageWorkers"
+                    checked={moderatorForm.permissions.canManageWorkers}
                     onChange={handleModeratorFormChange}
-                    className="col-span-3 w-full rounded-md border border-input bg-background px-3 py-2"
-                    required
-                  >
-                    <option value="">Select a user</option>
-                    {users.map((user) => (
-                      <option key={user._id} value={user._id}>
-                        {user.username} ({user.email})
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="hotelId" className="text-right">
-                    Hotel
-                  </Label>
-                  <select
-                    id="hotelId"
-                    name="hotelId"
-                    value={moderatorForm.hotelId}
+                    className="mb-2"
+                  />
+                  <Form.Check
+                    type="checkbox"
+                    label="Manage Rooms"
+                    name="permissions.canManageRooms"
+                    checked={moderatorForm.permissions.canManageRooms}
                     onChange={handleModeratorFormChange}
-                    className="col-span-3 w-full rounded-md border border-input bg-background px-3 py-2"
-                    required
-                  >
-                    <option value="">Select a hotel</option>
-                    {hotels.map((hotel) => (
-                      <option key={hotel._id} value={hotel._id}>
-                        {hotel.name} ({hotel.city})
-                      </option>
-                    ))}
-                  </select>
+                    className="mb-2"
+                  />
+                  <Form.Check
+                    type="checkbox"
+                    label="View Bookings"
+                    name="permissions.canViewBookings"
+                    checked={moderatorForm.permissions.canViewBookings}
+                    onChange={handleModeratorFormChange}
+                  />
                 </div>
-                <div className="grid grid-cols-4 items-start gap-4">
-                  <div className="text-right pt-2">Permissions</div>
-                  <div className="col-span-3 space-y-2">
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id="canManageWorkers"
-                        name="permissions.canManageWorkers"
-                        checked={moderatorForm.permissions.canManageWorkers}
-                        onCheckedChange={(checked) => 
-                          setModeratorForm({
-                            ...moderatorForm,
-                            permissions: {
-                              ...moderatorForm.permissions,
-                              canManageWorkers: checked
-                            }
-                          })
-                        }
-                      />
-                      <Label htmlFor="canManageWorkers">Manage Workers</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id="canManageRooms"
-                        name="permissions.canManageRooms"
-                        checked={moderatorForm.permissions.canManageRooms}
-                        onCheckedChange={(checked) => 
-                          setModeratorForm({
-                            ...moderatorForm,
-                            permissions: {
-                              ...moderatorForm.permissions,
-                              canManageRooms: checked
-                            }
-                          })
-                        }
-                      />
-                      <Label htmlFor="canManageRooms">Manage Rooms</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id="canViewBookings"
-                        name="permissions.canViewBookings"
-                        checked={moderatorForm.permissions.canViewBookings}
-                        onCheckedChange={(checked) => 
-                          setModeratorForm({
-                            ...moderatorForm,
-                            permissions: {
-                              ...moderatorForm.permissions,
-                              canViewBookings: checked
-                            }
-                          })
-                        }
-                      />
-                      <Label htmlFor="canViewBookings">View Bookings</Label>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <DialogFooter>
-                <Button type="submit" className="bg-hotel-500 hover:bg-hotel-600">
-                  {editingModeratorId ? 'Update Moderator' : 'Add Moderator'}
-                </Button>
-              </DialogFooter>
-            </form>
-          </DialogContent>
-        </Dialog>
+              </Form.Group>
+            </Modal.Body>
+            <Modal.Footer>
+              <Button variant="secondary" onClick={() => setModeratorModalShow(false)}>
+                Cancel
+              </Button>
+              <Button variant="primary" type="submit">
+                {editingModeratorId ? 'Update Moderator' : 'Add Moderator'}
+              </Button>
+            </Modal.Footer>
+          </Form>
+        </Modal>
         
-        {/* Hotel Dialog */}
-        <Dialog open={hotelDialogOpen} onOpenChange={setHotelDialogOpen}>
-          <DialogContent className="sm:max-w-[425px]">
-            <DialogHeader>
-              <DialogTitle>{editingHotelId ? 'Edit Hotel' : 'Add New Hotel'}</DialogTitle>
-              <DialogDescription>
-                {editingHotelId ? 'Update hotel details' : 'Create a new hotel in the system'}
-              </DialogDescription>
-            </DialogHeader>
-            <form onSubmit={handleHotelSubmit}>
-              <div className="grid gap-4 py-4">
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="name" className="text-right">
-                    Name
-                  </Label>
-                  <Input
-                    id="name"
-                    name="name"
-                    value={hotelForm.name}
-                    onChange={handleHotelFormChange}
-                    className="col-span-3"
-                    required
-                  />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="type" className="text-right">
-                    Type
-                  </Label>
-                  <select
-                    id="type"
-                    name="type"
-                    value={hotelForm.type}
-                    onChange={handleHotelFormChange}
-                    className="col-span-3 w-full rounded-md border border-input bg-background px-3 py-2"
-                    required
-                  >
-                    <option value="Hotel">Hotel</option>
-                    <option value="Apartment">Apartment</option>
-                    <option value="Resort">Resort</option>
-                    <option value="Villa">Villa</option>
-                    <option value="Cabin">Cabin</option>
-                  </select>
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="city" className="text-right">
-                    City
-                  </Label>
-                  <Input
-                    id="city"
-                    name="city"
-                    value={hotelForm.city}
-                    onChange={handleHotelFormChange}
-                    className="col-span-3"
-                    required
-                  />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="address" className="text-right">
-                    Address
-                  </Label>
-                  <Input
-                    id="address"
-                    name="address"
-                    value={hotelForm.address}
-                    onChange={handleHotelFormChange}
-                    className="col-span-3"
-                    required
-                  />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="distance" className="text-right">
-                    Distance
-                  </Label>
-                  <Input
-                    id="distance"
-                    name="distance"
-                    value={hotelForm.distance}
-                    onChange={handleHotelFormChange}
-                    className="col-span-3"
-                    placeholder="e.g. 500m from center"
-                    required
-                  />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="title" className="text-right">
-                    Title
-                  </Label>
-                  <Input
-                    id="title"
-                    name="title"
-                    value={hotelForm.title}
-                    onChange={handleHotelFormChange}
-                    className="col-span-3"
-                    required
-                  />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="desc" className="text-right">
-                    Description
-                  </Label>
-                  <textarea
-                    id="desc"
-                    name="desc"
-                    value={hotelForm.desc}
-                    onChange={handleHotelFormChange}
-                    className="col-span-3 min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2"
-                    required
-                  />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="cheapestPrice" className="text-right">
-                    Price
-                  </Label>
-                  <Input
-                    id="cheapestPrice"
-                    name="cheapestPrice"
-                    type="number"
-                    value={hotelForm.cheapestPrice}
-                    onChange={handleHotelFormChange}
-                    className="col-span-3"
-                    required
-                  />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <div className="text-right"></div>
-                  <div className="col-span-3">
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id="featured"
-                        name="featured"
-                        checked={hotelForm.featured}
-                        onCheckedChange={(checked) => 
-                          setHotelForm({...hotelForm, featured: checked})
-                        }
-                      />
-                      <Label htmlFor="featured">Featured Hotel</Label>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <DialogFooter>
-                <Button type="submit" className="bg-hotel-500 hover:bg-hotel-600">
-                  {editingHotelId ? 'Update Hotel' : 'Add Hotel'}
-                </Button>
-              </DialogFooter>
-            </form>
-          </DialogContent>
-        </Dialog>
+        {/* Hotel Modal */}
+        <Modal show={hotelModalShow} onHide={() => setHotelModalShow(false)}>
+          <Modal.Header closeButton>
+            <Modal.Title>{editingHotelId ? 'Edit Hotel' : 'Add New Hotel'}</Modal.Title>
+          </Modal.Header>
+          <Form onSubmit={handleHotelSubmit}>
+            <Modal.Body>
+              <Form.Group className="mb-3">
+                <Form.Label>Name</Form.Label>
+                <Form.Control
+                  name="name"
+                  value={hotelForm.name}
+                  onChange={handleHotelFormChange}
+                  required
+                />
+              </Form.Group>
+              
+              <Form.Group className="mb-3">
+                <Form.Label>Type</Form.Label>
+                <Form.Select
+                  name="type"
+                  value={hotelForm.type}
+                  onChange={handleHotelFormChange}
+                  required
+                >
+                  <option value="Hotel">Hotel</option>
+                  <option value="Apartment">Apartment</option>
+                  <option value="Resort">Resort</option>
+                  <option value="Villa">Villa</option>
+                  <option value="Cabin">Cabin</option>
+                </Form.Select>
+              </Form.Group>
+              
+              <Form.Group className="mb-3">
+                <Form.Label>City</Form.Label>
+                <Form.Control
+                  name="city"
+                  value={hotelForm.city}
+                  onChange={handleHotelFormChange}
+                  required
+                />
+              </Form.Group>
+              
+              <Form.Group className="mb-3">
+                <Form.Label>Address</Form.Label>
+                <Form.Control
+                  name="address"
+                  value={hotelForm.address}
+                  onChange={handleHotelFormChange}
+                  required
+                />
+              </Form.Group>
+              
+              <Form.Group className="mb-3">
+                <Form.Label>Distance</Form.Label>
+                <Form.Control
+                  name="distance"
+                  value={hotelForm.distance}
+                  onChange={handleHotelFormChange}
+                  placeholder="e.g. 500m from center"
+                  required
+                />
+              </Form.Group>
+              
+              <Form.Group className="mb-3">
+                <Form.Label>Title</Form.Label>
+                <Form.Control
+                  name="title"
+                  value={hotelForm.title}
+                  onChange={handleHotelFormChange}
+                  required
+                />
+              </Form.Group>
+              
+              <Form.Group className="mb-3">
+                <Form.Label>Description</Form.Label>
+                <Form.Control
+                  as="textarea"
+                  rows={3}
+                  name="desc"
+                  value={hotelForm.desc}
+                  onChange={handleHotelFormChange}
+                  required
+                />
+              </Form.Group>
+              
+              <Form.Group className="mb-3">
+                <Form.Label>Price</Form.Label>
+                <Form.Control
+                  name="cheapestPrice"
+                  type="number"
+                  value={hotelForm.cheapestPrice}
+                  onChange={handleHotelFormChange}
+                  required
+                />
+              </Form.Group>
+              
+              <Form.Group className="mb-3">
+                <Form.Check
+                  type="checkbox"
+                  label="Featured Hotel"
+                  name="featured"
+                  checked={hotelForm.featured}
+                  onChange={handleHotelFormChange}
+                />
+              </Form.Group>
+            </Modal.Body>
+            <Modal.Footer>
+              <Button variant="secondary" onClick={() => setHotelModalShow(false)}>
+                Cancel
+              </Button>
+              <Button variant="primary" type="submit">
+                {editingHotelId ? 'Update Hotel' : 'Add Hotel'}
+              </Button>
+            </Modal.Footer>
+          </Form>
+        </Modal>
       </div>
     </AuthGuard>
   );
